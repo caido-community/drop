@@ -15,3 +15,14 @@
 # Drop
 
 Easy collaboration within Caido.
+
+## Server
+
+To work, `Drop` requires a centralized server.
+You can either host it yourself or use a public instance.
+
+### Public servers
+
+| Domain        | Owner             |
+| ------------- | ----------------- |
+| `drop.cai.do` | `Caido Labs Inc.` |

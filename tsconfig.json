@@ -1,19 +1,14 @@
 {
   "compilerOptions": {
-    "target": "esnext",
-    "module": "esnext",
-    "lib": ["ESNext"],
-
-    "jsx": "preserve",
     "noImplicitAny": true,
     "noUncheckedIndexedAccess": true,
     "strict": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,
+    "forceConsistentCasingInFileNames": true,
 
-    "moduleResolution": "bundler",
     "esModuleInterop": true,
-    "sourceMap": true,
+    "sourceMap": false,
     "noUnusedLocals": true,
 
     "useDefineForClassFields": true,

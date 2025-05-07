@@ -1,9 +1,16 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
+    "target": "esnext",
+    "module": "esnext",
     "lib": ["DOM", "ESNext"],
     "types": ["@caido/sdk-backend"],
-    "baseUrl": ".",
+
+    "jsx": "preserve",
+    "moduleResolution": "bundler",
+
+    "outDir": "./dist",
+    "rootDir": "./src",
     "paths": {
       "@/*": ["src/*"]
     }
