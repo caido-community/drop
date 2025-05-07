@@ -13,7 +13,7 @@ const app = express();
 // Middleware
 app.use(cors());
 app.disable("x-powered-by");
-app.use(express.json());
+app.use(express.json({ limit: "2mb" }));
 
 // Routes
 app.post('/api/v1/send', async (req: Request, res: Response) => {
