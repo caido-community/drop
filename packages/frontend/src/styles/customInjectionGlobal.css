@@ -1,0 +1,88 @@
+.drop-injection {
+  margin-left: 8px;
+  position: relative;
+}
+
+.c-button__label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.c-button__leading-icon {
+  display: flex;
+  align-items: center;
+}
+
+.c-button__leading-icon .c-icon {
+  font-size: 0.875rem;
+}
+.c-drop-button {
+  background-color: var(--c-fg-primary);
+  padding: .5em 1em;
+  border-radius: var(--c-border-radius-1);
+}
+.c-drop-button:hover {
+  background-color: color-mix(in srgb, var(--c-fg-primary) 90%, white);
+}
+.c-drop-button:active {
+  background-color: var(--c-fg-primary--pressed);
+}
+
+.c-drop-dropdown-menu {
+  right: 0em;
+  display: none;
+  position: absolute;
+  z-index: 1000;
+  max-height: 14rem;
+  overflow: auto;
+  background-color: var(--c-bg-default);
+  border: 1px solid var(--c-bg-inset);
+  border-radius: 4px;
+  padding: 8px 0;
+  min-width: 200px;
+}
+
+.c-drop-dropdown-list {
+  margin: 0;
+  padding: 0.25rem;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.c-drop-dropdown-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  line-height: 1;
+  margin: 0;
+  padding: 0.5rem 0.75rem;
+  border: 0;
+  border-radius: 4px;
+  background-color: transparent;
+  color: var(--c-text-default);
+  transition: background-color 0.2s;
+  cursor: pointer;
+  font-weight: normal;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.c-drop-dropdown-item:first-child {
+  margin-top: 0;
+}
+
+.c-drop-dropdown-item:hover {
+  background-color: var(--c-bg-inset);
+}
+
+.c-drop-dropdown-item[aria-selected="true"] {
+  background-color: var(--c-highlight);
+  color: var(--c-text-on-highlight);
+}
+
+.c-filter .c-form-header {
+  justify-content: space-between;
+}
