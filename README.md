@@ -1,10 +1,17 @@
-# VueJS Frontend Template
+<div align="center">
+  <img width="1000" alt="image" src="https://github.com/caido-community/.github/blob/main/content/banner.png?raw=true">
 
-This template should be used as a starting point for creating a new plugin with a VueJS frontend.
+  <br />
+  <br />
+  <a href="https://github.com/caido-community" target="_blank">Github</a>
+  <span>&nbsp;&nbsp;•&nbsp;&nbsp;</span>
+  <a href="https://developer.caido.io/" target="_blank">Documentation</a>
+  <span>&nbsp;&nbsp;•&nbsp;&nbsp;</span>
+  <a href="https://links.caido.io/www-discord" target="_blank">Discord</a>
+  <br />
+  <hr />
+</div>
 
-## Features
+# Drop
 
-- [pnpm](https://pnpm.io/) as package manager
-- [TypeScript](https://www.typescriptlang.org/)
-- [VueJS](https://vuejs.org/)
-- [PrimeVue](https://primevue.org/) for UI components
+Easy collaboration within Caido.
