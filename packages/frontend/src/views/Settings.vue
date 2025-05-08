@@ -6,12 +6,11 @@ import Button from "primevue/button";
 import InputText from "primevue/inputtext";
 import Card from "primevue/card";
 import { useDrop } from "@/plugins/drop";
-import { PGPKeyPair, DropPluginConfig, defaultStorage } from "@/types";
+import { DropPluginConfig, defaultStorage } from "@/types";
 import { logger } from "@/utils/logger";
 const { generatePGPKeyPair, addConnection, removeConnection } = useDrop();
 
 const newConnectionShareCode = ref("");
-const newConnectionAlias = ref("");
 const isGeneratingKey = ref(false);
 const keyGenerationError = ref("");
 const userAlias = ref("");
@@ -27,7 +26,9 @@ sdk.storage.onChange((storage) => {
 });
 
 const encodedAlias = computed(() => {
-  return btoa(userAlias.value || '');
+  const encoder = new TextEncoder();
+  const encoded = encoder.encode(userAlias.value || "");
+  return btoa(String.fromCharCode.apply(null, [...encoded]));
 });
 
 const onGenerateKey = async (nocopy: boolean = false) => {
@@ -38,21 +39,30 @@ const onGenerateKey = async (nocopy: boolean = false) => {
     const keyPair = await generatePGPKeyPair();
     if (!nocopy) {
       copyFingerprint();
-      sdk.window.showToast("Share code successfully generated.", {variant:"success", duration:2000});
+      sdk.window.showToast("Share code successfully generated.", {
+        variant: "success",
+        duration: 2000,
+      });
     }
-    onAddConnection(null, `${keyPair.fingerprint}:${btoa((userAlias.value || ''))}`);
+    onAddConnection(undefined, `${keyPair.fingerprint}:${encodedAlias.value}`);
   } catch (error) {
     keyGenerationError.value = "Failed to generate PGP key pair";
     logger.error(error);
+    sdk.window.showToast("Failed to generate PGP key pair", {
+      variant: "error",
+      duration: 2000,
+    });
   } finally {
     isGeneratingKey.value = false;
   }
 };
 
-const onAddConnection = async (event?: ClipboardEvent, shareCodeOverride?: string) => {
-  // If event is provided (from paste), get the pasted content
+const onAddConnection = async (
+  event?: ClipboardEvent,
+  shareCodeOverride?: string
+) => {
   if (event) {
-    const pastedContent = event.clipboardData?.getData('text') || '';
+    const pastedContent = event.clipboardData?.getData("text") || "";
     newConnectionShareCode.value = pastedContent;
   }
 
@@ -63,28 +73,49 @@ const onAddConnection = async (event?: ClipboardEvent, shareCodeOverride?: strin
   if (!newConnectionShareCode.value) {
     return;
   }
-  const [fingerprint, alias] = newConnectionShareCode.value.split(':');
+
+  const [fingerprint, alias] = newConnectionShareCode.value.split(":");
+  if (!fingerprint || !alias) {
+    sdk.window.showToast("Invalid share code.", {
+      variant: "error",
+      duration: 2000,
+    });
+    return;
+  }
 
   const connections = localConfig.value?.connections;
   logger.log("[DROP] Connections", connections);
-  if (connections?.find(c => c.fingerprint === fingerprint)) {
+  if (connections?.find((c) => c.fingerprint === fingerprint)) {
     newConnectionShareCode.value = "";
-    sdk.window.showToast("Friend already added.", {variant:"info", duration:2000});
+    sdk.window.showToast("Friend already added.", {
+      variant: "info",
+      duration: 2000,
+    });
     return;
   }
 
   try {
-    const connectionAlias = alias ? atob(alias) : prompt('Please enter your friend\'s alias:');
+    const connectionAlias = alias
+      ? new TextDecoder().decode(Uint8Array.from(atob(alias), c => c.charCodeAt(0)))
+      : prompt("Please enter your friend's alias:");
     if (!connectionAlias) {
       return;
     }
+
     await addConnection(fingerprint, connectionAlias);
     newConnectionShareCode.value = "";
     if (!shareCodeOverride) {
-      sdk.window.showToast("Friend added successfully.", {variant:"success", duration:2000});
+      sdk.window.showToast("Friend added successfully.", {
+        variant: "success",
+        duration: 2000,
+      });
     }
   } catch (error) {
     logger.error("Failed to add connection:", error);
+    sdk.window.showToast("Failed to add connection", {
+      variant: "error",
+      duration: 2000,
+    });
   }
 };
 
@@ -96,14 +127,18 @@ const onRemoveConnection = async (fingerprint: string) => {
   }
 };
 
-const copyFingerprint = (e: Event) => {
-  if (e.target instanceof HTMLInputElement) {
+const copyFingerprint = (e?: Event) => {
+  if (e && e.target instanceof HTMLInputElement) {
     e.target.select();
   }
+
   if (localConfig.value?.pgpKeyPair) {
     const shareCode = `${localConfig.value.pgpKeyPair.fingerprint}:${encodedAlias.value}`;
     navigator.clipboard.writeText(shareCode);
-    sdk.window.showToast("Share code copied to clipboard", {variant:"success", duration:2000});
+    sdk.window.showToast("Share code copied to clipboard", {
+      variant: "success",
+      duration: 2000,
+    });
   }
 };
 
@@ -117,18 +152,20 @@ const updateUserAlias = async () => {
 
 const fetchUserName = async () => {
   try {
-    const auth = JSON.parse(localStorage.getItem('CAIDO_AUTHENTICATION') || '{}');
+    const auth = JSON.parse(
+      localStorage.getItem("CAIDO_AUTHENTICATION") || "{}"
+    );
     const accessToken = auth.accessToken;
 
     if (!accessToken) {
-      throw new Error('No access token found');
+      throw new Error("No access token found");
     }
 
-    const response = await fetch('/graphql', {
-      method: 'POST',
+    const response = await fetch("/graphql", {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${accessToken}`
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
       },
       body: JSON.stringify({
         query: `query Viewer {
@@ -142,18 +179,18 @@ const fetchUserName = async () => {
             }
           }
         }`,
-        operationName: 'Viewer'
-      })
+        operationName: "Viewer",
+      }),
     });
 
     const data = await response.json();
-    if(!data?.data?.viewer?.profile?.identity?.name){
+    if (!data?.data?.viewer?.profile?.identity?.name) {
       logger.log("[DROP] Failed to fetch user name.  Trying legacy endpoint:");
-      const response = await fetch('/graphql', {
-          method: 'POST',
-          headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${accessToken}`
+      const response = await fetch("/graphql", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
         },
         body: JSON.stringify({
           query: `query Viewer {
@@ -165,8 +202,8 @@ const fetchUserName = async () => {
               }
             }
           }`,
-          operationName: 'Viewer'
-        })
+          operationName: "Viewer",
+        }),
       });
 
       const data = await response.json();
@@ -174,17 +211,19 @@ const fetchUserName = async () => {
     }
     return data?.data?.viewer?.profile?.identity?.name;
   } catch (err) {
-    logger.error('Failed to fetch user name:', err);
+    logger.error("Failed to fetch user name:", err);
     return "Caido User";
   }
 };
 
 const onUpdateConnectionAlias = async (fingerprint: string) => {
   if (!editedAlias.value) return;
-  
+
   try {
     const storage = await sdk.storage.get();
-    const connection = storage.connections.find(c => c.fingerprint === fingerprint);
+    const connection = storage.connections.find(
+      (c) => c.fingerprint === fingerprint
+    );
     if (connection) {
       connection.alias = editedAlias.value;
       await sdk.storage.set({ ...storage });
@@ -203,10 +242,16 @@ const updateServerConfig = async () => {
     storage.apiServer = apiServer.value;
     storage.keyServer = keyserver.value;
     await sdk.storage.set({ ...storage });
-    sdk.window.showToast("Server configuration updated successfully.", {variant:"success", duration:2000});
+    sdk.window.showToast("Server configuration updated successfully.", {
+      variant: "success",
+      duration: 2000,
+    });
   } catch (error) {
     logger.error("Failed to update server configuration:", error);
-    sdk.window.showToast("Failed to update server configuration.", {variant:"error", duration:2000});
+    sdk.window.showToast("Failed to update server configuration.", {
+      variant: "error",
+      duration: 2000,
+    });
   }
 };
 
@@ -248,7 +293,11 @@ onMounted(async () => {
   <div class="p-4">
     <Card class="mb-4">
       <template #title>
-        {{ localConfig.pgpKeyPair ? 'Your Share Code (PGP Fingerprint)' : 'Generate Your Share Code (PGP)' }}
+        {{
+          localConfig.pgpKeyPair
+            ? "Your Share Code (PGP Fingerprint)"
+            : "Generate Your Share Code (PGP)"
+        }}
       </template>
       <template #content>
         <div class="flex flex-col gap-4">
@@ -265,7 +314,9 @@ onMounted(async () => {
 
           <div v-else class="flex flex-col gap-2">
             <div class="flex flex-col gap-2 mb-4">
-              <label for="userAlias">Your Alias (shared along with Share Code)</label>
+              <label for="userAlias"
+                >Your Alias (shared along with Share Code)</label
+              >
               <InputText
                 id="userAlias"
                 v-model="userAlias"
@@ -294,12 +345,23 @@ onMounted(async () => {
               class="text-primary cursor-pointer hover:underline"
               @click="showAdvancedOptions = !showAdvancedOptions"
             >
-              {{ showAdvancedOptions ? 'Hide Advanced Options' : 'Show Advanced Options' }}
+              {{
+                showAdvancedOptions
+                  ? "Hide Advanced Options"
+                  : "Show Advanced Options"
+              }}
             </span>
             <div v-if="showAdvancedOptions" class="flex flex-col gap-4">
               <p class="text-sm text-gray-100">
-                The settings below should only be used if you're hosting your own instance of drop. You can find the repository for the drop server
-                <a href="https://github.com/caido-community/drop/tree/main/packages/server" target="_blank" class="text-primary hover:underline">here.</a>
+                The settings below should only be used if you're hosting your
+                own instance of drop. You can find the repository for the drop
+                server
+                <a
+                  href="https://github.com/caido-community/drop/tree/main/packages/server"
+                  target="_blank"
+                  class="text-primary hover:underline"
+                  >here.</a
+                >
               </p>
               <div class="flex flex-col gap-2">
                 <label for="apiServer">API Server URL</label>
@@ -337,17 +399,24 @@ onMounted(async () => {
               placeholder="Paste share code here to add a new friend."
               class="w-full"
               @paste="onAddConnection"
+              @keyup.enter="onAddConnection"
             />
           </div>
 
-          <div v-if="localConfig.connections.length > 0" class="flex flex-col gap-2">
+          <div
+            v-if="localConfig.connections.length > 0"
+            class="flex flex-col gap-2"
+          >
             <div
               v-for="conn in localConfig.connections"
               :key="conn.fingerprint"
-              class="flex items-center justify-between p-2 border rounded"
+              class="flex items-center justify-between p-3 bg-zinc-800/40 rounded transition-colors"
             >
               <div>
-                <div v-if="editingConnection === conn.fingerprint" class="flex gap-2">
+                <div
+                  v-if="editingConnection === conn.fingerprint"
+                  class="flex gap-2"
+                >
                   <InputText
                     v-model="editedAlias"
                     @keyup.enter="onUpdateConnectionAlias(conn.fingerprint)"
@@ -356,13 +425,23 @@ onMounted(async () => {
                   />
                 </div>
                 <div v-else>
-                  <p class="font-bold cursor-pointer" @dblclick="() => { editingConnection = conn.fingerprint; editedAlias = conn.alias; }">{{ conn.alias }}</p>
+                  <p
+                    class="font-bold cursor-text cursor-pointer hover:underline"
+                    @dblclick="
+                      () => {
+                        editingConnection = conn.fingerprint;
+                        editedAlias = conn.alias;
+                      }
+                    "
+                  >
+                    {{ conn.alias }}
+                  </p>
                   <p class="text-sm text-gray-500">{{ conn.fingerprint }}</p>
                 </div>
               </div>
               <Button
                 icon="fas fa-trash"
-                class="p-button-danger"
+                class="p-button-danger p-button-text"
                 @click="onRemoveConnection(conn.fingerprint)"
               />
             </div>
@@ -372,4 +451,4 @@ onMounted(async () => {
       </template>
     </Card>
   </div>
-</template> 
+</template>

@@ -16,9 +16,10 @@ export const init = async (sdk: FrontendSDK) => {
   if (!storage) {
     await sdk.storage.set(defaultStorage);
     logger.log("Storage not found, setting default storage");
-  }else{
+  } else {
     logger.log("Storage found, using existing storage", storage);
   }
+
   const app = createApp(App);
 
   // Load the PrimeVue component library
@@ -29,6 +30,7 @@ export const init = async (sdk: FrontendSDK) => {
 
   app.use(SDKPlugin, sdk);
   app.use(ToastService);
+
   // Create the root element for the app
   const root = document.createElement("div");
   Object.assign(root.style, {
@@ -37,7 +39,7 @@ export const init = async (sdk: FrontendSDK) => {
   });
 
   // Set the ID of the root element
-  // Replace this with the value of the prefixWrap plugin in caido.config.ts 
+  // Replace this with the value of the prefixWrap plugin in caido.config.ts
   // This is necessary to prevent styling conflicts between plugins
   root.id = `plugin--drop`;
 
@@ -55,9 +57,7 @@ export const init = async (sdk: FrontendSDK) => {
     icon: "fas fa-droplet",
   });
 
-
   // Initialize DOM injection manager
   const domInjectionManager = new DOMInjectionManager(sdk);
   domInjectionManager.start();
 };
-

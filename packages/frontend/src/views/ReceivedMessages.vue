@@ -4,7 +4,7 @@ import Button from "primevue/button";
 import Card from "primevue/card";
 import DataTable from "primevue/datatable";
 import Column from "primevue/column";
-import { useDrop} from "@/plugins/drop";
+import { useDrop } from "@/plugins/drop";
 import { DropPayload } from "@/types";
 import { useSDK } from "@/plugins/sdk";
 import { DropPluginConfig } from "@/types";
@@ -13,8 +13,9 @@ import { logger } from "@/utils/logger";
 const { generateSummary } = useDrop();
 const sdk = useSDK();
 const localConfig = ref<DropPluginConfig | null>(null);
+
 sdk.storage.onChange((storage) => {
-  localConfig.value = storage;
+  localConfig.value = storage as unknown as DropPluginConfig;
   logger.log("[ReceivedMessages] Storage changed", storage);
   loadMessages();
 });
@@ -26,7 +27,9 @@ const error = ref("");
 const loadMessages = async () => {
   try {
     if (localConfig.value) {
-      const currentConfig = JSON.parse(JSON.stringify(localConfig.value)) as DropPluginConfig;
+      const currentConfig = JSON.parse(
+        JSON.stringify(localConfig.value)
+      ) as DropPluginConfig;
       logger.log("[loadMessages] Current config:", currentConfig);
       messages.value = currentConfig.messages || [];
     }
@@ -51,22 +54,31 @@ const onRefresh = async () => {
 
 // Load initial messages
 onMounted(async () => {
-  let storage = await sdk.storage.get();
-  localConfig.value = storage;
+  const data = await sdk.storage.get();
+  localConfig.value = data as unknown as DropPluginConfig;
   await loadMessages();
 });
 
 const onClaim = async (message: DropPayload) => {
   logger.log("[onClaim] Processing claim message", message);
-  const event = new CustomEvent('drop:claim', { detail: { payload:message, alias:getSenderAlias(message.message_metadata?.from_public_key) } });
+  const event = new CustomEvent("drop:claim", {
+    detail: {
+      payload: message,
+      alias: getSenderAlias(message.message_metadata?.from_public_key || ""),
+    },
+  });
   document.dispatchEvent(event);
 };
 
 const onDelete = async (message: DropPayload) => {
   try {
     if (localConfig.value) {
-      const currentConfig = JSON.parse(JSON.stringify(localConfig.value)) as DropPluginConfig;
-      const updatedMessages = (currentConfig.messages || []).filter(m => m.id !== message.id);
+      const currentConfig = JSON.parse(
+        JSON.stringify(localConfig.value)
+      ) as DropPluginConfig;
+      const updatedMessages = (currentConfig.messages || []).filter(
+        (m) => m.id !== message.id
+      );
       currentConfig.messages = updatedMessages;
       await sdk.storage.set(currentConfig);
       messages.value = updatedMessages;
@@ -80,7 +92,9 @@ const onDelete = async (message: DropPayload) => {
 const onDeleteAll = async () => {
   try {
     if (localConfig.value) {
-      const currentConfig = JSON.parse(JSON.stringify(localConfig.value)) as DropPluginConfig;
+      const currentConfig = JSON.parse(
+        JSON.stringify(localConfig.value)
+      ) as DropPluginConfig;
       currentConfig.messages = [];
       await sdk.storage.set(currentConfig);
       messages.value = [];
@@ -94,7 +108,7 @@ const onDeleteAll = async () => {
 const onClaimAll = async () => {
   messages.value.forEach(async (message) => {
     await onClaim(message);
-    await new Promise(resolve => setTimeout(resolve, 500));
+    await new Promise((resolve) => setTimeout(resolve, 500));
   });
 };
 
@@ -106,83 +120,102 @@ const getSenderAlias = (fingerprint: string) => {
 };
 
 const getTableData = () => {
-  return messages.value.map(message => ({
+  return messages.value.map((message) => ({
     id: message.id,
-    sender: getSenderAlias(message.message_metadata?.from_public_key),
-    received: new Date(message.message_metadata?.created_at).toLocaleString(),
+    sender: getSenderAlias(message.message_metadata?.from_public_key || ""),
+    received: new Date(message.message_metadata?.created_at || "").toLocaleString(),
     summary: generateSummary(message),
-    message: message
+    message: message,
   }));
 };
 </script>
 
 <template>
-  <div class="p-4">
-    <Card>
-      <template #title>
-        <div class="flex justify-between items-center">
-          <span>Received Messages</span>
-          <div class="flex gap-2">
-            <Button
-              icon="fas fa-arrows-rotate"
-              class="p-button-text"
-              :loading="isLoading"
-              @click="onRefresh"
-            />
-            <Button
-              icon="fas fa-check"
-              label="Claim All"
-              class="p-button-text"
-              @click="onClaimAll"
-              :disabled="messages.length === 0"
-            />
-            <Button
-              icon="fas fa-trash"
-              label="Delete All"
-              class="p-button-text p-button-danger"
-              :disabled="messages.length === 0"
-              @click="onDeleteAll"
-            />
-          </div>
-        </div>
-      </template>
-      <template #content>
-        <div class="flex flex-col gap-4">
-          <p v-if="error" class="text-red-500">{{ error }}</p>
-
-          <div v-if="messages.length === 0" class="text-gray-500">
-            No messages received yet
-          </div>
-
-          <DataTable
-            v-else
-            :value="getTableData()"
+  <Card
+    class="h-full"
+    :pt="{
+      root: { class: 'flex flex-col h-full' },
+      body: { class: 'flex-grow flex flex-col p-0' },
+      content: { class: 'flex-grow flex flex-col' },
+    }"
+  >
+    <template #title>
+      <div class="flex justify-between items-center p-4">
+        <span>Received Messages</span>
+        <div class="flex gap-2">
+          <Button
+            icon="fas fa-arrows-rotate"
+            class="p-button-text"
+            size="small"
             :loading="isLoading"
-            class="p-datatable-sm"
-            responsiveLayout="scroll"
-          >
-            <Column field="sender" header="Sender" sortable />
-            <Column field="received" header="Received" sortable />
-            <Column field="summary" header="Summary" sortable />
-            <Column header="Actions">
-              <template #body="slotProps">
-                <div class="flex gap-2">
-                  <Button
-                    icon="fas fa-check"
-                    label="Claim"
-                    @click="onClaim(slotProps.data.message)"
-                  />
-                  <Button
-                    icon="fas fa-trash"
-                    class="p-button-danger"
-                    @click="onDelete(slotProps.data.message)"
-                  />
-                </div>
-              </template>
-            </Column>
-          </DataTable>
+            @click="onRefresh"
+          />
+          <Button
+            icon="fas fa-check"
+            label="Claim All"
+            size="small"
+            class="p-button-text"
+            @click="onClaimAll"
+            :disabled="messages.length === 0"
+          />
+          <Button
+            icon="fas fa-trash"
+            label="Delete All"
+            size="small"
+            class="p-button-text p-button-danger"
+            :disabled="messages.length === 0"
+            @click="onDeleteAll"
+          />
         </div>
-      </template>
-    </Card>
-  </div>
+      </div>
+    </template>
+    <template #content>
+      <div style="height: 100%; display: flex; flex-direction: column">
+        <p v-if="error" class="text-red-500 p-3">{{ error }}</p>
+
+        <div
+          v-if="messages.length === 0"
+          class="flex flex-col items-center justify-center py-12 text-gray-500"
+        >
+          <i class="fas fa-inbox text-4xl mb-4"></i>
+          <p>No messages received yet</p>
+        </div>
+
+        <DataTable
+          v-else
+          :value="getTableData()"
+          :loading="isLoading"
+          stripedRows
+          scrollable
+          scrollHeight="80vh"
+          class="p-datatable-sm"
+          responsiveLayout="scroll"
+          style="flex: 1; overflow: auto; padding: 0"
+          :pt="{
+            wrapper: { class: 'p-0' },
+          }"
+        >
+          <Column field="sender" header="Sender" sortable />
+          <Column field="received" header="Received" sortable />
+          <Column field="summary" header="Summary" sortable />
+          <Column header="Actions" style="width: 150px">
+            <template #body="slotProps">
+              <div class="flex gap-2">
+                <Button
+                  icon="fas fa-check"
+                  label="Claim"
+                  @click="onClaim(slotProps.data.message)"
+                />
+                <Button
+                  icon="fas fa-trash"
+                  class="p-button-danger"
+                  @click="onDelete(slotProps.data.message)"
+                />
+              </div>
+            </template>
+          </Column>
+        </DataTable>
+      </div>
+    </template>
+  </Card>
 </template>
