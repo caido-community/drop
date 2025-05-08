@@ -310,9 +310,9 @@ const handleDropEvent = async (event: CustomEvent) => {
       message,
       encryptionKeys: publicKey,
     });
-    const timestamp = Math.floor(Date.now() / 1000).toString();
+    const timestamp = Math.floor(Date.now() / 1000);
     logger.log("Creating signature");
-    const signature = await createSignature(`${connection.fingerprint}|${encryptedData.toString()}|${timestamp}`);
+    const signature = await createSignature(`${connection.fingerprint}|${encryptedData.toString()}|${timestamp.toString()}`);
 
     // Create the message
     logger.log("Creating drop message");
