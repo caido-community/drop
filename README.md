@@ -26,7 +26,7 @@ Easy collaboration within Caido.
 
 ![image](https://github.com/user-attachments/assets/e3eaa8a7-792d-4a27-8c21-f8b4666c5aba)
 
-Once installed from the Caido Community Plugin Store, add a friend's share code, and look for the below "Drop to..." box on any of the following objects:
+Drop enables easy collaboration with other Caido users over a fully E2EE channel. Immediately after install, Drop allows you to share the following objects with 1 click:
 * Replay Tabs
 * Match & Replace Rules
 * Scopes
@@ -36,7 +36,7 @@ Once installed from the Caido Community Plugin Store, add a friend's share code,
 * Findings (COMING SOON)
 * HTTPQL Searches (COMING SOON)
 
-**Drop is completely E2EE using PGP.**
+Drop's encryption is done via PGP. We get the target user's PGP fingerprint when you add them as a friend (via share code), then we use the fingerprint to grab the full public key from a key server. All transferred data is encrypted using those public keys before hitting any public server. 
 
 **NOTE: All messages will be stored on the server for a maximum of 7 days. Drop is not a storage mechanism, and all messages should be assumed to be ephemeral.**
 
@@ -56,7 +56,7 @@ Once installed from the Caido Community Plugin Store, add a friend's share code,
 
 ## Server
 
-To work, `Drop` requires a centralized server. The data that flows through the server is completely end-to-end encrypted using the target user's PGP public key, which is shared via the sharecode. 
+To work, `Drop` requires a centralized server. The data that flows through the server is completely end-to-end encrypted using the target user's PGP public key, which is shared via the share code. 
 
 The code for the server is public, so you can host your own instance or use any of the public servers below.
 
@@ -77,3 +77,11 @@ No unencrypted userdata is ever placed into the DB.
 | Domain        | Owner             |
 | ------------- | ----------------- |
 | `drop.cai.do` | `Caido Labs Inc.` |
+
+
+## Disclosures
+Per the Caido Developer Policy, we are required to inform you that, for this plugin:
+* External services are required for full access.
+
+### External services
+Drop requires a server to relay information from one user to another. The above public server is hosted by Caido Labs Inc. The default configuration for the plugin utilizes this service. No data is retained longer than 7 days. All data is E2EE with PGP. 
