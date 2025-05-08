@@ -380,7 +380,7 @@ const handleDropEvent = async (event: CustomEvent) => {
     const dropMessage: DropSendMessage = {
       to_public_key: connection.fingerprint,
       encrypted_data: encryptedData.toString(),
-      timestamp: timestamp.toString(),
+      timestamp: timestamp,
       signature: signature,
     };
 
