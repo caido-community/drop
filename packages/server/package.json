@@ -1,6 +1,6 @@
 {
-  "name": "drop-backend",
-  "version": "1.0.0",
+  "name": "server",
+  "version": "0.1.0",
   "description": "Drop API Server for Caido plugin",
   "main": "dist/index.js",
   "scripts": {
@@ -16,7 +16,8 @@
     "express": "5.1.0",
     "openpgp": "6.1.0",
     "pino": "9.6.0",
-    "pino-pretty": "13.0.0"
+    "pino-pretty": "13.0.0",
+    "zod": "3.24.4"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.9",
