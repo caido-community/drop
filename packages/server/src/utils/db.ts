@@ -1,8 +1,8 @@
-import Database from 'better-sqlite3';
-import logger from './logger';
+import Database from "better-sqlite3";
+import logger from "./logger";
 
-const dbPath = process.env.DB_PATH || 'messages.db';
-logger.info({ dbPath }, 'Initializing database connection');
+const dbPath = process.env.DB_PATH || "messages.db";
+logger.info({ dbPath }, "Initializing database connection");
 
 const db = new Database(dbPath);
 
@@ -24,4 +24,4 @@ db.exec(`
   );
 `);
 
-export default db; 
+export default db;
