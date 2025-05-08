@@ -56,7 +56,7 @@ Once installed from the Caido Community Plugin Store, add a friend's share code,
 
 ## Server
 
-To work, `Drop` requires a centralized server. The data that flows through the server is completely end-to-end encrypted using the target user's PGP public key, which is shared via the sharecode. 
+To work, `Drop` requires a centralized server. The data that flows through the server is completely end-to-end encrypted using the target user's PGP public key, which is shared via the share code. 
 
 The code for the server is public, so you can host your own instance or use any of the public servers below.
 
