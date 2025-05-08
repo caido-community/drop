@@ -26,7 +26,7 @@ Easy collaboration within Caido.
 
 ![image](https://github.com/user-attachments/assets/e3eaa8a7-792d-4a27-8c21-f8b4666c5aba)
 
-Once installed from the Caido Community Plugin Store, add a friend's share code, and look for the below "Drop to..." box on any of the following objects:
+Drop enables easy collaboration with other Caido users over a fully E2EE channel. Immediately after install, Drop allows you to share the following objects with 1 click:
 * Replay Tabs
 * Match & Replace Rules
 * Scopes
@@ -36,7 +36,7 @@ Once installed from the Caido Community Plugin Store, add a friend's share code,
 * Findings (COMING SOON)
 * HTTPQL Searches (COMING SOON)
 
-**Drop is completely E2EE using PGP.**
+Drop's encryption is done via PGP. We get the target user's PGP fingerprint when you add them as a friend (via share code), then we use the fingerprint to grab the full public key from a key server. All transferred data is encrypted using those public keys before hitting any public server. 
 
 **NOTE: All messages will be stored on the server for a maximum of 7 days. Drop is not a storage mechanism, and all messages should be assumed to be ephemeral.**
 
