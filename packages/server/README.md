@@ -36,21 +36,14 @@ A secure, ephemeral message broker for the Caido plugin that facilitates end-to-
 
 1. Install dependencies:
    ```bash
-   npm install
+   pnpm install
    ```
-
-2. Create a `.env` file with the following variables:
-   ```
-   PORT=8787
-   NODE_ENV=development
-   DB_PATH=./data/messages.db
-   ```
-
-3. Run the development server:
+2. Run the development server:
    ```bash
-   npm run dev
+   pnpm dev
    ```
-
+3. The server will be available at `http://localhost:8787`
+   
 ### Docker Deployment
 
 1. Build and start the containers:
@@ -178,45 +171,3 @@ key TEXT NOT NULL
 ## License
 
 MIT
-
-## Drop
-
-Drop is a Caido plugin that helps encourage collaboration. 
-
-Currently, you can share with your collaborators:
-* Replay Tabs
-* Replay Collections
-* Filters
-* HTTPQL Queries
-* Scopes
-* Workflows
-* Notes
-
-The structure of Drop is simple. Each hacker is identified by their public key. When you send data via our server, everything is end-to-end encrypted. Our server DB is extremely simple:
-```
-id, from_public_key, to_public_key, encrypted_data, created_at
-```
-We cannot store unencrypted data. 
-
-You send data to another hacker by supplying their public key, and recieve data at your public key. Only you can decrypt the data as you have the corresponding private key (right? lolz - key management is hard).
-
-Our API backend is also extremely simple:
-```
-POST /send - a POST request to send data to another hacker
-POST /poll - a POST request to retrieve data from other hackers
-```
-
-All messages are treated as emphemeral and will be deleted if not polled away in 7 days. 
-
-The data, once decrypted, looks like this:
-```js
-{
-    "id":1, // For logistics purposes
-    "objects":[], // Set of objects in the message
-    "notes":"", // Notes sent along with the objects -- NOT CURRENTLY SUPPORTED
-    "sha256":"" // a sha256 hash of the key `objects`' value
-}
-```
-
-This data is parsed by the client-side when claimed, and integrated into Caido.
-
