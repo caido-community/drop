@@ -55,7 +55,8 @@ A secure, ephemeral message broker for the Caido plugin that facilitates end-to-
 
 1. Build and start the containers:
    ```bash
-   docker-compose up -d
+   docker build . -f ./packages/server/Dockerfile -t drop:latest
+   docker run drop:latest
    ```
 
 2. The server will be available at `http://localhost:8787`
