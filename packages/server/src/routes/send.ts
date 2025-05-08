@@ -7,7 +7,7 @@ import logger from "../utils/logger";
 import db from "../utils/db";
 
 const SendRequestSchema = z.object({
-  to_public_key: z.string(),
+  to_public_key: z.string().regex(/^[A-Fa-f0-9]{40}$/),
   encrypted_data: z.string(),
   timestamp: z.number(),
   signature: z.string(),
