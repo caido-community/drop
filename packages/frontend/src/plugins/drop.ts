@@ -319,8 +319,6 @@ const handleDropEvent = async (event: CustomEvent) => {
   const { payload, connection, type } = event.detail;
   logger.log("Processing payload and connection", { payload, connection });
 
-  sdk.window.showToast("Dropping message", { variant: "info", duration: 1000 });
-
   try {
     // Calculate SHA256 hash
     logger.log("Calculating SHA256 hash for payload");
