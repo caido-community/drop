@@ -20,7 +20,7 @@ jobs:
       - name: Check Tag
         id: check-tag
         run: |
-          if [[ ${{ github.ref }} =~ ^refs/tags/v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+          if [[ ${{ github.ref }} =~ ^refs/tags/[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
               echo "valid=true" >> $GITHUB_OUTPUT
               TAG=$(echo $GITHUB_REF | cut -d / -f 3)
               echo "tag=${TAG}" >> $GITHUB_OUTPUT
