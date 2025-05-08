@@ -45,9 +45,11 @@ export interface DropPayload {
 export interface DropPluginConfig {
   pgpKeyPair?: PGPKeyPair;
   connections: DropConnection[];
+  apiServer: string;
   messages?: DropPayload[];
   alias?: string;
   firstOpen: boolean;
+  keyServer: string;
 }
 
 export const defaultStorage: DropPluginConfig = {
@@ -55,5 +57,7 @@ export const defaultStorage: DropPluginConfig = {
   connections: [],
   messages: [],
   alias: undefined,
+  apiServer: "https://drop.cai.do",
+  keyServer: "https://keys.openpgp.org/",
   firstOpen: true
 };

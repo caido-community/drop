@@ -7,8 +7,6 @@ import { useToast } from "primevue/usetoast";
 import { claimReplay, claimScope, claimFilter, claimTamper } from "@/utils/claimUtil";
 import { logger } from "@/utils/logger";
 const isDev = window.name.includes("dev");
-const API_URL = isDev ? "http://localhost:8787" : "https://drop-backend.justin-c75.workers.dev";
-const KEY_SERVER_URL = "https://keys.openpgp.org/";
 const POLL_INTERVAL = 5*1000; // 5 seconds
 let sdk: FrontendSDK;
 
@@ -18,7 +16,8 @@ const processedMessageIds = new Set<string>();
 // Message Handling
 const uploadKeyToKeyserver = async (publicKey: string): Promise<{ key_fpr: string; token: string; status: Record<string, string> }> => {
   try {
-    const response = await fetch(`${KEY_SERVER_URL}/vks/v1/upload`, {
+    let storage = await sdk.storage.get();
+    const response = await fetch(`${storage.keyServer}/vks/v1/upload`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -64,7 +63,7 @@ const pollForMessages = async (toast: ReturnType<typeof useToast>) => {
     const timestamp = Math.floor(Date.now() / 1000);
     const signature = await createSignature(timestamp.toString());
 
-    const response = await fetch(`${API_URL}/api/v1/poll`, {
+    const response = await fetch(`${storage.apiServer}/api/v1/poll`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -87,6 +86,9 @@ const pollForMessages = async (toast: ReturnType<typeof useToast>) => {
 };
 
 const processMessages = async (messages: DropMessage[], toast: ReturnType<typeof useToast>) => {
+  if (messages.length === 0){
+    return;
+  }
   logger.log("Processing messages", messages);
   for (const message of messages) {
     if (processedMessageIds.has(message.id)) {
@@ -322,8 +324,9 @@ const handleDropEvent = async (event: CustomEvent) => {
     };
 
     // Send the message
+    let storage = await sdk.storage.get();
     logger.log("Sending drop message", dropMessage);
-    const response = await fetch(`${API_URL}/api/v1/send`, {
+    const response = await fetch(`${storage.apiServer}/api/v1/send`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -349,14 +352,14 @@ export const useDrop = () => {
     sdk = useSDK();
 
     const addConnection = async (fingerprint: string, alias: string): Promise<void> => {
-        const publicKey = await fetch(`${KEY_SERVER_URL}/vks/v1/by-fingerprint/${fingerprint}`).then(res => res.text());
+        let storage = await sdk.storage.get();
+        const publicKey = await fetch(`${storage.keyServer}/vks/v1/by-fingerprint/${fingerprint}`).then(res => res.text());
         const connection: DropConnection = {
             alias,
             fingerprint,
             publicKey,
         };
 
-        let storage = await sdk.storage.get();
         storage.connections.push(connection);
         await sdk.storage.set({...storage});
     };
@@ -370,22 +373,25 @@ export const useDrop = () => {
     };
     // Initialize the plugin
     const initializeDrop = async (toast: ReturnType<typeof useToast>) => {
+      if (isDev){
+        let storage = await sdk.storage.get();
+        sdk.storage.set({...storage, apiServer: "http://localhost:8787"});
+      }
+      // Set up event listener for drop events
+      document.addEventListener('drop:send', ((event: CustomEvent<{ payload: DropPayload; connection: DropConnection }>) => {
+        handleDropEvent(event);
+      }) as EventListener);
 
-        // Set up event listener for drop events
-        document.addEventListener('drop:send', ((event: CustomEvent<{ payload: DropPayload; connection: DropConnection }>) => {
-          handleDropEvent(event);
-        }) as EventListener);
+      document.addEventListener('drop:claim', ((event: CustomEvent<{ payload: DropPayload }>) => {
+        handleClaimEvent(event);
+      }) as EventListener);
 
-        document.addEventListener('drop:claim', ((event: CustomEvent<{ payload: DropPayload }>) => {
-          handleClaimEvent(event);
-        }) as EventListener);
+      document.addEventListener('drop:delete', ((event: CustomEvent<{ payload: DropPayload }>) => {
+        handleDeleteEvent(event);
+      }) as EventListener);
 
-        document.addEventListener('drop:delete', ((event: CustomEvent<{ payload: DropPayload }>) => {
-          handleDeleteEvent(event);
-        }) as EventListener);
-
-        // Start polling for new messages
-        startPolling(toast);
+      // Start polling for new messages
+      startPolling(toast);
     };
 
     // PGP Key Management
@@ -393,6 +399,7 @@ export const useDrop = () => {
         const { privateKey, publicKey } = await generateKey({
             type: "rsa",
             rsaBits: 3072,
+            //config: {v6Keys: true}
             userIDs: [{ name: "CaidoDrop", email: "drop@caido.io", comment: "CaidoDrop" }]
         });
 

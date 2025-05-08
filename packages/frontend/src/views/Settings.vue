@@ -17,6 +17,9 @@ const keyGenerationError = ref("");
 const userAlias = ref("");
 const editingConnection = ref<string | null>(null);
 const editedAlias = ref("");
+const apiServer = ref("");
+const keyserver = ref("");
+const showAdvancedOptions = ref(false);
 
 const localConfig = ref<DropPluginConfig>(defaultStorage);
 sdk.storage.onChange((storage) => {
@@ -194,16 +197,37 @@ const onUpdateConnectionAlias = async (fingerprint: string) => {
   }
 };
 
+const updateServerConfig = async () => {
+  try {
+    const storage = await sdk.storage.get();
+    storage.apiServer = apiServer.value;
+    storage.keyServer = keyserver.value;
+    await sdk.storage.set({ ...storage });
+    sdk.window.showToast("Server configuration updated successfully.", {variant:"success", duration:2000});
+  } catch (error) {
+    logger.error("Failed to update server configuration:", error);
+    sdk.window.showToast("Failed to update server configuration.", {variant:"error", duration:2000});
+  }
+};
+
+const handleServerConfigChange = () => {
+  updateServerConfig();
+};
+
 onMounted(async () => {
   let storage = await sdk.storage.get();
   localConfig.value = storage;
   logger.log("Settings' Storage", storage);
 
+  // Set initial values for servers
+  apiServer.value = storage.apiServer || "";
+  keyserver.value = storage.keyServer || "";
+
   // Set initial alias from config if it exists
   if (storage.alias) {
     userAlias.value = storage.alias;
   } else {
-      // If no stored alias, fetch from API
+    // If no stored alias, fetch from API
     const name = await fetchUserName();
     if (name) {
       userAlias.value = name;
@@ -262,6 +286,41 @@ onMounted(async () => {
                 class="font-mono w-full select-none"
                 @dblclick="copyFingerprint"
               />
+            </div>
+          </div>
+
+          <div class="flex flex-col gap-4 mt-4">
+            <span
+              class="text-primary cursor-pointer hover:underline"
+              @click="showAdvancedOptions = !showAdvancedOptions"
+            >
+              {{ showAdvancedOptions ? 'Hide Advanced Options' : 'Show Advanced Options' }}
+            </span>
+            <div v-if="showAdvancedOptions" class="flex flex-col gap-4">
+              <p class="text-sm text-gray-100">
+                The settings below should only be used if you're hosting your own instance of drop. You can find the repository for the drop server
+                <a href="https://github.com/caido-community/drop/tree/main/packages/server" target="_blank" class="text-primary hover:underline">here.</a>
+              </p>
+              <div class="flex flex-col gap-2">
+                <label for="apiServer">API Server URL</label>
+                <InputText
+                  id="apiServer"
+                  v-model="apiServer"
+                  placeholder="Enter API Server URL"
+                  @change="handleServerConfigChange"
+                  @keyup.enter="handleServerConfigChange"
+                />
+              </div>
+              <div class="flex flex-col gap-2">
+                <label for="keyserver">Key Server URL</label>
+                <InputText
+                  id="keyserver"
+                  v-model="keyserver"
+                  placeholder="Enter Key Server URL"
+                  @change="handleServerConfigChange"
+                  @keyup.enter="handleServerConfigChange"
+                />
+              </div>
             </div>
           </div>
         </div>
