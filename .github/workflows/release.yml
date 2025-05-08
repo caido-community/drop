@@ -30,6 +30,8 @@ jobs:
     if: needs.verify.outputs.valid == 'true'
     name: Release server
     runs-on: ubuntu-latest
+    permissions:
+      packages: write
     needs: verify
 
     steps:
