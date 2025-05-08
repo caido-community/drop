@@ -77,3 +77,11 @@ No unencrypted userdata is ever placed into the DB.
 | Domain        | Owner             |
 | ------------- | ----------------- |
 | `drop.cai.do` | `Caido Labs Inc.` |
+
+
+## Disclosures
+Per the Caido Developer Policy, we are required to inform you that, for this plugin:
+* External services are required for full access.
+
+### External services
+Drop requires a server to relay information from one user to another. The above public server is hosted by Caido Labs Inc. The default configuration for the plugin utilizes this service. No data is retained longer than 7 days. All data is E2EE with PGP. 
