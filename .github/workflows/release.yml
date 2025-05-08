@@ -1,20 +1,36 @@
 name: 🚀 Release
 
 on:
-  push:
-    tags:
-      - '[0-9]+.[0-9]+.[0-9]+'
-
+  release:
+    types: [released]
 env:
   NODE_VERSION: 22
   PNPM_VERSION: 10
 
 jobs:
+  verify:
+    name: Verify tag
+    runs-on: ubuntu-latest
+
+    outputs:
+      valid: ${{ steps.check-tag.outputs.valid }}
+      tag: ${{ steps.check-tag.outputs.tag }}
+
+    steps:
+      - name: Check Tag
+        id: check-tag
+        run: |
+          if [[ ${{ github.ref }} =~ ^refs/tags/v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+              echo "valid=true" >> $GITHUB_OUTPUT
+              TAG=$(echo $GITHUB_REF | cut -d / -f 3)
+              echo "tag=${TAG}" >> $GITHUB_OUTPUT
+          fi
+
   server:
+    if: needs.verify.outputs.valid == 'true'
     name: Release server
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
+    needs: verify
 
     steps:
       - name: Checkout project
@@ -37,15 +53,17 @@ jobs:
           push: true
           tags: |
             ghcr.io/${{ github.repository_owner }}/drop:latest
-            ghcr.io/${{ github.repository_owner }}/drop:${{ github.ref }}
+            ghcr.io/${{ github.repository_owner }}/drop:${{ needs.verify.outputs.tag }}
           cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/drop:buildcache
           cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/drop:buildcache,mode=max
 
   plugin:
+    if: needs.verify.outputs.valid == 'true'
     name: Release plugin
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    needs: verify
 
     steps:
       - name: Checkout project
@@ -80,4 +98,4 @@ jobs:
         working-directory: dist
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release upload ${{ github.ref }} plugin_package.zip plugin_package.zip.sig
+        run: gh release upload ${{ needs.verify.outputs.tag }} plugin_package.zip plugin_package.zip.sig
