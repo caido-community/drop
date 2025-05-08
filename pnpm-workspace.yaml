@@ -1,2 +1,9 @@
 packages:
-  - 'packages/*'
+  - packages/*
+injectWorkspacePackages: true
+onlyBuiltDependencies:
+  - better-sqlite3
+  - esbuild
+syncInjectedDepsAfterScripts:
+  - build
+  - build:server

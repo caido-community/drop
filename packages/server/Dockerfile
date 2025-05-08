@@ -1,51 +1,44 @@
-# Build stage
-FROM node:20-slim AS builder
-
+# Base stage
+FROM node:20-slim AS base
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+RUN npm install -g pnpm@10
 WORKDIR /app
 
-# Copy package files
-COPY package.json ./
-COPY ../pnpm-lock.yaml ./
-
-# Install dependencies
-RUN npm install -g pnpm && pnpm install --frozen-lockfile
-
-# Copy source code
-COPY . .
-
-# Build TypeScript files
-RUN pnpm run build
+# Builder stage
+FROM base AS builder
+COPY . /app
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
+RUN pnpm run build:server
+RUN pnpm deploy --filter=server --prod /prod/server
 
 # Production stage
-FROM node:20-slim
+FROM base
 
-WORKDIR /app
-
-# Install runtime dependencies
+## Install runtime dependencies
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy built application from builder stage
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/dist ./dist
+## Copy built application from builder stage
+COPY --from=builder /prod/server /app
 
-# Create directory for SQLite database and set permissions
+## Create directory for SQLite database and set permissions
 RUN mkdir -p /data && \
     chown -R node:node /data && \
     chmod 755 /data
 
-# Switch to non-root user
+## Switch to non-root user
 USER node
 
-# Set environment variables
+## Set environment variables
 ENV NODE_ENV=production \
     PORT=8787 \
     DB_PATH=/data/messages.db
 
-# Expose port (will be overridden by docker-compose)
+## Expose port (will be overridden by docker-compose)
 EXPOSE ${PORT}
 
-# Start the application
+## Start the application
 CMD ["node", "dist/index.js"]
