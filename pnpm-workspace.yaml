@@ -1,2 +1,6 @@
 packages:
   - 'packages/*'
+injectWorkspacePackages: true
+syncInjectedDepsAfterScripts:
+  - build
+  - build:server

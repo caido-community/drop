@@ -5,6 +5,7 @@
   "scripts": {
     "typecheck": "pnpm -r typecheck",
     "build": "caido-dev build",
+    "build:server": "pnpm --filter server build",
     "watch": "caido-dev watch"
   },
   "devDependencies": {
