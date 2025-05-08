@@ -1,13 +1,14 @@
 <script setup lang="ts">
-import { useSDK } from "@/plugins/sdk";
-const sdk = useSDK();
-import { ref, onMounted, computed } from "vue";
 import Button from "primevue/button";
-import InputText from "primevue/inputtext";
 import Card from "primevue/card";
+import InputText from "primevue/inputtext";
+import { computed, onMounted, ref } from "vue";
+
 import { useDrop } from "@/plugins/drop";
-import { DropPluginConfig, defaultStorage } from "@/types";
+import { useSDK } from "@/plugins/sdk";
+import { defaultStorage, type DropPluginConfig } from "@/types";
 import { logger } from "@/utils/logger";
+const sdk = useSDK();
 const { generatePGPKeyPair, addConnection, removeConnection } = useDrop();
 
 const newConnectionShareCode = ref("");
@@ -59,7 +60,7 @@ const onGenerateKey = async (nocopy: boolean = false) => {
 
 const onAddConnection = async (
   event?: ClipboardEvent,
-  shareCodeOverride?: string
+  shareCodeOverride?: string,
 ) => {
   if (event) {
     const pastedContent = event.clipboardData?.getData("text") || "";
@@ -96,7 +97,9 @@ const onAddConnection = async (
 
   try {
     const connectionAlias = alias
-      ? new TextDecoder().decode(Uint8Array.from(atob(alias), c => c.charCodeAt(0)))
+      ? new TextDecoder().decode(
+          Uint8Array.from(atob(alias), (c) => c.charCodeAt(0)),
+        )
       : prompt("Please enter your friend's alias:");
     if (!connectionAlias) {
       return;
@@ -153,7 +156,7 @@ const updateUserAlias = async () => {
 const fetchUserName = async () => {
   try {
     const auth = JSON.parse(
-      localStorage.getItem("CAIDO_AUTHENTICATION") || "{}"
+      localStorage.getItem("CAIDO_AUTHENTICATION") || "{}",
     );
     const accessToken = auth.accessToken;
 
@@ -222,7 +225,7 @@ const onUpdateConnectionAlias = async (fingerprint: string) => {
   try {
     const storage = await sdk.storage.get();
     const connection = storage.connections.find(
-      (c) => c.fingerprint === fingerprint
+      (c) => c.fingerprint === fingerprint,
     );
     if (connection) {
       connection.alias = editedAlias.value;
@@ -419,9 +422,9 @@ onMounted(async () => {
                 >
                   <InputText
                     v-model="editedAlias"
+                    autofocus
                     @keyup.enter="onUpdateConnectionAlias(conn.fingerprint)"
                     @blur="onUpdateConnectionAlias(conn.fingerprint)"
-                    autofocus
                   />
                 </div>
                 <div v-else>

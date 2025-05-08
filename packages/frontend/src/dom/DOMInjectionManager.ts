@@ -1,10 +1,14 @@
-import { FrontendSDK } from "@/types";
-import { DropConnection, DropPayload } from "@/types";
+import { Classic } from "@caido/primevue";
+import PrimeVue from "primevue/config";
 import { v4 as uuidv4 } from "uuid";
 import { createApp } from "vue";
+
 import DropToButton from "@/components/DropToButton.vue";
-import PrimeVue from "primevue/config";
-import { Classic } from "@caido/primevue";
+import {
+  type DropConnection,
+  type DropPayload,
+  type FrontendSDK,
+} from "@/types";
 import { logger } from "@/utils/logger";
 
 interface InjectionHandler {
@@ -77,7 +81,7 @@ export class DOMInjectionManager {
     container: Element,
     callback: (connection: DropConnection) => void,
     sdk: FrontendSDK,
-    customClasses?: string
+    customClasses?: string,
   ) {
     // Create the button container
     const buttonContainer = document.createElement("div");
@@ -87,7 +91,7 @@ export class DOMInjectionManager {
     logger.log(
       "Generating button to this container",
       container,
-      buttonContainer
+      buttonContainer,
     );
 
     // Create a Vue app instance
@@ -107,7 +111,7 @@ export class DOMInjectionManager {
   private handleTamperActions(container: Element, sdk: FrontendSDK) {
     const callback = (connection: DropConnection) => {
       const preset = document.querySelector(
-        '.c-tree-rule[data-is-active="true"]'
+        '.c-tree-rule[data-is-active="true"]',
       );
       const id = preset?.getAttribute("data-rule-id");
       if (!id) {
@@ -122,7 +126,7 @@ export class DOMInjectionManager {
       if (JSON.stringify(rule).indexOf('"kind":"ReplacerWorkflow"') > -1) {
         this.sdk.window.showToast(
           "Sorry, we don't support workflow M&R rules yet.",
-          { variant: "error", duration: 5000 }
+          { variant: "error", duration: 5000 },
         );
         return;
       }
@@ -149,7 +153,7 @@ export class DOMInjectionManager {
   private handleReplayActions(container: Element, sdk: FrontendSDK) {
     const callback = async (connection: DropConnection) => {
       const button = document.querySelector(
-        '.c-tab-list__body .c-tab-list__tab > div[data-is-selected="true"]'
+        '.c-tab-list__body .c-tab-list__tab > div[data-is-selected="true"]',
       );
       if (!button) {
         this.sdk.window.showToast("Please select a replay tab first.", {
@@ -217,7 +221,7 @@ export class DOMInjectionManager {
   private handleFilterActions(container: Element, sdk: FrontendSDK) {
     const callback = (connection: DropConnection) => {
       const preset = document.querySelector(
-        '.c-preset[data-is-selected="true"]'
+        '.c-preset[data-is-selected="true"]',
       );
       const id = preset?.getAttribute("data-preset-id");
       if (!id) {
@@ -252,7 +256,7 @@ export class DOMInjectionManager {
   private handleScopeActions(container: Element, sdk: FrontendSDK) {
     const callback = (connection: DropConnection) => {
       const preset = document.querySelector(
-        '.c-preset[data-is-selected="true"]'
+        '.c-preset[data-is-selected="true"]',
       );
       const id = preset?.getAttribute("data-preset-id");
       if (!id) {

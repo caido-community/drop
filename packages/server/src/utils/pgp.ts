@@ -1,8 +1,10 @@
 import * as openpgp from "openpgp";
 import type { PrimaryUser } from "openpgp";
-import { KeyValidationResult } from "../types";
-import logger from "./logger";
+
+import { type KeyValidationResult } from "../types";
+
 import db from "./db";
+import logger from "./logger";
 
 const VKS_API_URL = "https://keys.openpgp.org/vks/v1/by-fingerprint/";
 const CACHE_TTL = 600; // 10 minutes
@@ -127,7 +129,7 @@ export async function verifySignature(
     );
 
     key.getPrimaryUser = async () =>
-      ({ user: {}, selfCertification: {}, index: 0 } as PrimaryUser); // Hack to force validation on userId-less object.
+      ({ user: {}, selfCertification: {}, index: 0 }) as PrimaryUser; // Hack to force validation on userId-less object.
 
     const verification = await openpgp.verify({
       message,

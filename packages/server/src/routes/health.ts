@@ -1,4 +1,5 @@
-import { Request, Response } from "express";
+import { type Request, type Response } from "express";
+
 import db from "../utils/db";
 import logger from "../utils/logger";
 

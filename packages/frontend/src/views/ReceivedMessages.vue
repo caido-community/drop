@@ -1,13 +1,13 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
 import Button from "primevue/button";
 import Card from "primevue/card";
-import DataTable from "primevue/datatable";
 import Column from "primevue/column";
+import DataTable from "primevue/datatable";
+import { onMounted, ref } from "vue";
+
 import { useDrop } from "@/plugins/drop";
-import { DropPayload } from "@/types";
 import { useSDK } from "@/plugins/sdk";
-import { DropPluginConfig } from "@/types";
+import { type DropPayload, type DropPluginConfig } from "@/types";
 import { logger } from "@/utils/logger";
 
 const { generateSummary } = useDrop();
@@ -28,7 +28,7 @@ const loadMessages = async () => {
   try {
     if (localConfig.value) {
       const currentConfig = JSON.parse(
-        JSON.stringify(localConfig.value)
+        JSON.stringify(localConfig.value),
       ) as DropPluginConfig;
       logger.log("[loadMessages] Current config:", currentConfig);
       messages.value = currentConfig.messages || [];
@@ -74,10 +74,10 @@ const onDelete = async (message: DropPayload) => {
   try {
     if (localConfig.value) {
       const currentConfig = JSON.parse(
-        JSON.stringify(localConfig.value)
+        JSON.stringify(localConfig.value),
       ) as DropPluginConfig;
       const updatedMessages = (currentConfig.messages || []).filter(
-        (m) => m.id !== message.id
+        (m) => m.id !== message.id,
       );
       currentConfig.messages = updatedMessages;
       await sdk.storage.set(currentConfig);
@@ -93,7 +93,7 @@ const onDeleteAll = async () => {
   try {
     if (localConfig.value) {
       const currentConfig = JSON.parse(
-        JSON.stringify(localConfig.value)
+        JSON.stringify(localConfig.value),
       ) as DropPluginConfig;
       currentConfig.messages = [];
       await sdk.storage.set(currentConfig);
@@ -114,7 +114,7 @@ const onClaimAll = async () => {
 
 const getSenderAlias = (fingerprint: string) => {
   const connection = localConfig.value?.connections.find(
-    (conn) => conn.fingerprint === fingerprint
+    (conn) => conn.fingerprint === fingerprint,
   );
   return connection?.alias || fingerprint;
 };
@@ -123,7 +123,9 @@ const getTableData = () => {
   return messages.value.map((message) => ({
     id: message.id,
     sender: getSenderAlias(message.message_metadata?.from_public_key || ""),
-    received: new Date(message.message_metadata?.created_at || "").toLocaleString(),
+    received: new Date(
+      message.message_metadata?.created_at || "",
+    ).toLocaleString(),
     summary: generateSummary(message),
     message: message,
   }));
@@ -155,8 +157,8 @@ const getTableData = () => {
             label="Claim All"
             size="small"
             class="p-button-text"
-            @click="onClaimAll"
             :disabled="messages.length === 0"
+            @click="onClaimAll"
           />
           <Button
             icon="fas fa-trash"
@@ -185,11 +187,11 @@ const getTableData = () => {
           v-else
           :value="getTableData()"
           :loading="isLoading"
-          stripedRows
+          striped-rows
           scrollable
-          scrollHeight="80vh"
+          scroll-height="80vh"
           class="p-datatable-sm"
-          responsiveLayout="scroll"
+          responsive-layout="scroll"
           style="flex: 1; overflow: auto; padding: 0"
           :pt="{
             wrapper: { class: 'p-0' },

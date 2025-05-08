@@ -1,10 +1,10 @@
-import { Request, Response } from "express";
+import { type Request, type Response } from "express";
 import { z } from "zod";
 
-import { ErrorResponse } from "../types";
-import { validatePublicKey, verifySignature } from "../utils/pgp";
-import logger from "../utils/logger";
+import { type ErrorResponse } from "../types";
 import db from "../utils/db";
+import logger from "../utils/logger";
+import { validatePublicKey, verifySignature } from "../utils/pgp";
 
 const SendRequestSchema = z.object({
   to_public_key: z.string().regex(/^[A-Fa-f0-9]{40}$/),

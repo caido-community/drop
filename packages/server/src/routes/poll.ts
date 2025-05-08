@@ -1,10 +1,10 @@
-import { Request, Response } from "express";
+import { type Request, type Response } from "express";
 import { z } from "zod";
 
-import { Message, ErrorResponse } from "../types";
-import { validatePublicKey, verifySignature } from "../utils/pgp";
-import logger from "../utils/logger";
+import { type ErrorResponse, type Message } from "../types";
 import db from "../utils/db";
+import logger from "../utils/logger";
+import { validatePublicKey, verifySignature } from "../utils/pgp";
 
 const PollRequestSchema = z.object({
   timestamp: z.number(),

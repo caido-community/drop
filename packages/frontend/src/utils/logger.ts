@@ -12,5 +12,5 @@ export const logger = {
   },
   info: (...args: any[]) => {
     console.info("[DROP]", ...args);
-  }
-}; 
+  },
+};

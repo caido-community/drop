@@ -1,4 +1,4 @@
-import { Caido } from "@caido/sdk-frontend";
+import { type Caido } from "@caido/sdk-frontend";
 
 export type FrontendSDK = Caido<{}, {}>;
 
@@ -59,5 +59,5 @@ export const defaultStorage: DropPluginConfig = {
   alias: undefined,
   apiServer: "https://drop.cai.do",
   keyServer: "https://keys.openpgp.org/",
-  firstOpen: true
+  firstOpen: true,
 };

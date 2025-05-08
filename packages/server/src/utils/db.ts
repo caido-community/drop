@@ -1,4 +1,5 @@
 import Database from "better-sqlite3";
+
 import logger from "./logger";
 
 const dbPath = process.env.DB_PATH || "messages.db";

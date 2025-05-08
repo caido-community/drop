@@ -3,11 +3,11 @@
     v-model="selectedConnection"
     :options="connections"
     :loading="isLoading"
-    optionLabel="alias"
+    option-label="alias"
     placeholder="Drop to..."
     class="w-full"
-    @change="handleConnectionSelect"
     :filter="true"
+    @change="handleConnectionSelect"
   >
     <template #option="slotProps">
       <div class="flex items-center gap-2">
@@ -18,9 +18,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
 import Select from "primevue/select";
-import { DropConnection, FrontendSDK } from "@/types";
+import { onMounted, ref } from "vue";
+
+import { type DropConnection, type FrontendSDK } from "@/types";
 import { logger } from "@/utils/logger";
 
 const props = defineProps<{

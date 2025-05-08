@@ -1,10 +1,10 @@
-import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import express from "express";
 
-import logger from "./utils/logger";
 import routes from "./routes";
 import { cleanupOldMessages } from "./utils/cleanup";
+import logger from "./utils/logger";
 
 dotenv.config();
 

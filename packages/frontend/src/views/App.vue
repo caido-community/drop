@@ -1,14 +1,16 @@
 <script setup lang="ts">
-import { useSDK } from "@/plugins/sdk";
-import { ref, onMounted } from "vue";
-import MenuBar from "primevue/menubar";
-import Settings from "./Settings.vue";
-import ReceivedMessages from "./ReceivedMessages.vue";
-import { useToast } from "primevue/usetoast";
-import { useDrop } from "@/plugins/drop";
-import DropToast from "@/components/DropToast.vue";
-import { logger } from "@/utils/logger";
 import Card from "primevue/card";
+import MenuBar from "primevue/menubar";
+import { useToast } from "primevue/usetoast";
+import { onMounted, ref } from "vue";
+
+import ReceivedMessages from "./ReceivedMessages.vue";
+import Settings from "./Settings.vue";
+
+import DropToast from "@/components/DropToast.vue";
+import { useDrop } from "@/plugins/drop";
+import { useSDK } from "@/plugins/sdk";
+import { logger } from "@/utils/logger";
 
 const sdk = useSDK();
 const page = ref("Received Messages");
@@ -59,7 +61,10 @@ onMounted(async () => {
       </template>
     </MenuBar>
 
-    <Card class="h-full" :pt="{ body: { class: 'h-full' }, content: { class: 'h-full' } }">
+    <Card
+      class="h-full"
+      :pt="{ body: { class: 'h-full' }, content: { class: 'h-full' } }"
+    >
       <template #content>
         <ReceivedMessages v-if="page === 'Received Messages'" />
         <Settings v-if="page === 'Settings'" />

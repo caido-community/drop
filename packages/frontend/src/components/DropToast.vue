@@ -49,7 +49,7 @@
 </template>
 
 <script setup lang="ts">
-import Toast from "primevue/toast";
 import Button from "primevue/button";
 import ButtonGroup from "primevue/buttongroup";
+import Toast from "primevue/toast";
 </script>
