@@ -24,7 +24,7 @@ export interface DropMessage {
 export interface DropSendMessage {
   to_public_key: string;
   encrypted_data: string;
-  timestamp: string;
+  timestamp: number;
   signature: string;
 }
 
