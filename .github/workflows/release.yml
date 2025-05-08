@@ -49,7 +49,8 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v5
         with:
-          context: ./packages/server
+          context: .
+          dockerfile: packages/server/Dockerfile
           push: true
           tags: |
             ghcr.io/${{ github.repository_owner }}/drop:latest
