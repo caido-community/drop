@@ -50,7 +50,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          dockerfile: packages/server/Dockerfile
+          file: packages/server/Dockerfile
           push: true
           tags: |
             ghcr.io/${{ github.repository_owner }}/drop:latest
