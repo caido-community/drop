@@ -21,20 +21,20 @@
 import Select from "primevue/select";
 import { onMounted, ref } from "vue";
 
-import { type DropConnection, type FrontendSDK } from "@/types";
+import { ConfigService } from "@/services/configService";
+import { type DropConnection, type DropPluginConfig } from "@/types";
 import { logger } from "@/utils/logger";
 
 const props = defineProps<{
-  sdk: FrontendSDK;
   title: string;
   onConnectionSelect: (connection: DropConnection) => void;
 }>();
 
 const isLoading = ref(false);
 const connections = ref<DropConnection[]>([]);
-const selectedConnection = ref<DropConnection | null>(null);
+const selectedConnection = ref<DropConnection | undefined>(undefined);
 
-const loadConnections = async (data: any) => {
+const loadConnections = (data: DropPluginConfig) => {
   try {
     isLoading.value = true;
     const rawData = data;
@@ -52,12 +52,12 @@ const loadConnections = async (data: any) => {
 const handleConnectionSelect = () => {
   if (selectedConnection.value) {
     props.onConnectionSelect(selectedConnection.value);
-    selectedConnection.value = null;
+    selectedConnection.value = undefined;
   }
 };
 
 onMounted(() => {
-  props.sdk.storage.onChange((data) => {
+  ConfigService.onConfigChange((data) => {
     logger.log("[DROP] Storage changed for " + props.title, data);
     loadConnections(data);
   });
@@ -65,7 +65,7 @@ onMounted(() => {
   // Wait for storage to be initialized before loading connections
   const waitForStorage = async () => {
     let data;
-    while (!(data = await props.sdk.storage.get())) {
+    while (!(data = ConfigService.getConfig())) {
       await new Promise((resolve) => setTimeout(resolve, 100));
     }
     logger.log("[DROP] Storage initialized for " + props.title, data);

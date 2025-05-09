@@ -8,7 +8,9 @@
   "dependencies": {
     "@caido/primevue": "0.1.2",
     "crypto-js": "^4.2.0",
+    "mitt": "^3.0.1",
     "openpgp": "^5.11.2",
+    "pinia": "^3.0.2",
     "primevue": "4.1.0",
     "uuid": "^9.0.1",
     "vue": "3.4.37"

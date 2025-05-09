@@ -9,6 +9,7 @@ import {
   type DropPayload,
   type FrontendSDK,
 } from "@/types";
+import { eventBus } from "@/utils/eventBus";
 import { logger } from "@/utils/logger";
 
 interface InjectionHandler {
@@ -96,7 +97,6 @@ export class DOMInjectionManager {
 
     // Create a Vue app instance
     const app = createApp(DropToButton, {
-      sdk: sdk,
       title: "Drop to",
       onConnectionSelect: callback,
     });
@@ -136,16 +136,11 @@ export class DOMInjectionManager {
         notes: "M&R Rule drop",
       };
 
-      // Create and dispatch the custom event
-      const dropEvent = new CustomEvent("drop:send", {
-        detail: {
-          payload: payload,
-          type: "Tamper",
-          connection: connection,
-        },
+      eventBus.emit("drop:send", {
+        payload: payload,
+        type: "Tamper",
+        connection: connection,
       });
-
-      document.dispatchEvent(dropEvent);
     };
     this.generateButton(container, callback, sdk, "pr-4");
   }
@@ -204,15 +199,11 @@ export class DOMInjectionManager {
       };
 
       // Create and dispatch the custom event
-      const dropEvent = new CustomEvent("drop:send", {
-        detail: {
-          payload: payload,
-          type: "Replay",
-          connection: connection,
-        },
+      eventBus.emit("drop:send", {
+        payload: payload,
+        type: "Replay",
+        connection: connection,
       });
-
-      document.dispatchEvent(dropEvent);
     };
     container.classList.add("justify-between");
     this.generateButton(container, callback, sdk, "pr-2");
@@ -239,16 +230,11 @@ export class DOMInjectionManager {
         notes: "Filter drop",
       };
 
-      // Create and dispatch the custom event
-      const dropEvent = new CustomEvent("drop:send", {
-        detail: {
-          payload: payload,
-          type: "filter",
-          connection: connection,
-        },
+      eventBus.emit("drop:send", {
+        payload: payload,
+        type: "Filter",
+        connection: connection,
       });
-
-      document.dispatchEvent(dropEvent);
     };
     this.generateButton(container, callback, sdk);
   }
@@ -274,16 +260,11 @@ export class DOMInjectionManager {
         notes: "Scope drop",
       };
 
-      // Create and dispatch the custom event
-      const dropEvent = new CustomEvent("drop:send", {
-        detail: {
-          payload: payload,
-          type: "Scope",
-          connection: connection,
-        },
+      eventBus.emit("drop:send", {
+        payload: payload,
+        type: "Scope",
+        connection: connection,
       });
-
-      document.dispatchEvent(dropEvent);
     };
     this.generateButton(container, callback, sdk);
   }

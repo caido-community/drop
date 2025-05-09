@@ -30,7 +30,7 @@ export const claimReplay = async (
     if (!sessionId) {
       throw new Error("Session ID is null");
     }
-    await sdk.replay.openTab(sessionId);
+    sdk.replay.openTab(sessionId);
     const isNameNumeric = /^\d+$/.test(session.name);
     await sdk.graphql.renameReplaySession({
       id: sessionId,

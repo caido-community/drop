@@ -9,14 +9,12 @@ import Settings from "./Settings.vue";
 
 import DropToast from "@/components/DropToast.vue";
 import { useDrop } from "@/plugins/drop";
-import { useSDK } from "@/plugins/sdk";
+import { ConfigService } from "@/services/configService";
 import { logger } from "@/utils/logger";
 
-const sdk = useSDK();
 const page = ref("Received Messages");
 const toast = useToast();
 const { initializeDrop } = useDrop();
-logger.log("[App] SDK", sdk);
 
 const items = ref([
   {
@@ -29,12 +27,13 @@ const items = ref([
   },
 ]);
 
-onMounted(async () => {
+onMounted(() => {
   initializeDrop(toast);
   logger.log("[App] Initializing");
-  const storage = await sdk.storage.get();
-  logger.log("[App] Storage", storage);
-  if (storage && typeof storage === "object" && "firstOpen" in storage) {
+
+  const config = ConfigService.getConfig();
+  logger.log("[App] Config", config);
+  if (config.firstOpen) {
     page.value = "Settings";
   }
 });

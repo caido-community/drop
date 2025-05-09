@@ -1,16 +1,16 @@
 export const logger = {
-  log: (...args: any[]) => {
+  log: (...args: unknown[]) => {
     if (window.name.includes("dev")) {
       console.log("[DROP]", ...args);
     }
   },
-  error: (...args: any[]) => {
+  error: (...args: unknown[]) => {
     console.error("[DROP]", ...args);
   },
-  warn: (...args: any[]) => {
+  warn: (...args: unknown[]) => {
     console.warn("[DROP]", ...args);
   },
-  info: (...args: any[]) => {
+  info: (...args: unknown[]) => {
     console.info("[DROP]", ...args);
   },
 };

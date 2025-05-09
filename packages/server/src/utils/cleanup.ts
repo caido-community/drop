@@ -1,7 +1,7 @@
 import db from "./db";
 import logger from "./logger";
 
-export async function cleanupOldMessages() {
+export function cleanupOldMessages() {
   try {
     const result = db
       .prepare(

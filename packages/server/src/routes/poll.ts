@@ -56,12 +56,12 @@ export default async (req: Request, res: Response) => {
       // Delete retrieved messages
       if (messages.length > 0) {
         const ids = messages.map((m) => m.id);
-        await db
-          .prepare(
-            "DELETE FROM messages WHERE id IN (" +
-              ids.map(() => "?").join(",") +
-              ")",
-          )
+
+        db.prepare(
+          "DELETE FROM messages WHERE id IN (" +
+            ids.map(() => "?").join(",") +
+            ")",
+        )
           .bind(...ids)
           .run();
 
@@ -74,10 +74,11 @@ export default async (req: Request, res: Response) => {
       }
 
       return res.json(messages);
-    } catch (error: any) {
+    } catch (error: unknown) {
       if (
-        error.message === "Signature verification failed" ||
-        error.message === "Timestamp validation failed"
+        error instanceof Error &&
+        (error.message === "Signature verification failed" ||
+          error.message === "Timestamp validation failed")
       ) {
         logger.warn({ error: error.message }, "Invalid signature or timestamp");
         return res

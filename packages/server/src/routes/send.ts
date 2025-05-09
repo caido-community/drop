@@ -85,10 +85,11 @@ export default async (req: Request, res: Response) => {
         "Message stored successfully",
       );
       return res.status(201).send();
-    } catch (error: any) {
+    } catch (error: unknown) {
       if (
-        error.message === "Signature verification failed" ||
-        error.message === "Timestamp validation failed"
+        error instanceof Error &&
+        (error.message === "Signature verification failed" ||
+          error.message === "Timestamp validation failed")
       ) {
         logger.warn({ error: error.message }, "Invalid signature or timestamp");
         return res

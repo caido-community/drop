@@ -11,12 +11,16 @@ import {
 } from "openpgp";
 import { type useToast } from "primevue/usetoast";
 
+import { DropAPI } from "@/api/dropService";
 import { useSDK } from "@/plugins/sdk";
+import { ConfigService } from "@/services/configService";
 import {
+  type CustomToastMessageOptions,
   type DropConnection,
   type DropMessage,
   type DropPayload,
   type DropSendMessage,
+  type DropType,
   type FrontendSDK,
   type PGPKeyPair,
 } from "@/types";
@@ -26,7 +30,9 @@ import {
   claimScope,
   claimTamper,
 } from "@/utils/claimUtil";
+import { eventBus } from "@/utils/eventBus";
 import { logger } from "@/utils/logger";
+
 const isDev = window.name.includes("dev");
 const POLL_INTERVAL = 5 * 1000;
 let sdk: FrontendSDK;
@@ -34,57 +40,27 @@ let sdk: FrontendSDK;
 // Processed message IDs cache (per session)
 const processedMessageIds = new Set<string>();
 
-// Message Handling
-const uploadKeyToKeyserver = async (
-  publicKey: string,
-): Promise<{
-  key_fpr: string;
-  token: string;
-  status: Record<string, string>;
-}> => {
-  try {
-    const storage = await sdk.storage.get();
-    const response = await fetch(`${storage.keyServer}/vks/v1/upload`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        keytext: publicKey,
-      }),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(
-        errorData.error || `Failed to upload key: ${response.statusText}`,
-      );
-    }
-
-    return await response.json();
-  } catch (error) {
-    logger.error("Failed to upload key to keyserver:", error);
-    throw error;
-  }
-};
 const startPolling = (toast: ReturnType<typeof useToast>) => {
   if (window.name.includes("nopoll")) {
     return;
   }
+
   setInterval(async () => {
-    if (window.name.includes("dev")) {
+    if (isDev) {
       await pollForMessages(toast);
     } else {
       try {
         await pollForMessages(toast);
-      } catch (error) {}
+      } catch (error) {
+        logger.error("Failed to poll for messages:", error);
+      }
     }
   }, POLL_INTERVAL);
 };
 
 const pollForMessages = async (toast: ReturnType<typeof useToast>) => {
-  const storage = await sdk.storage.get();
-  if (!storage.pgpKeyPair) {
+  const config = ConfigService.getConfig();
+  if (!config.pgpKeyPair) {
     return;
   }
 
@@ -92,23 +68,12 @@ const pollForMessages = async (toast: ReturnType<typeof useToast>) => {
     const timestamp = Math.floor(Date.now() / 1000);
     const signature = await createSignature(timestamp.toString());
 
-    const response = await fetch(`${storage.apiServer}/api/v1/poll`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        timestamp,
-        signature,
-      }),
-    });
-
-    if (!response.ok) {
-      throw new Error(`Polling failed: ${response.statusText}`);
+    const result = await DropAPI.pollMessages(timestamp, signature);
+    if (result.error) {
+      throw result.error;
     }
 
-    const messages: DropMessage[] = await response.json();
-    await processMessages(messages, toast);
+    await processMessages(result.data, toast);
   } catch (error) {
     logger.log("Failed to poll for messages:", error);
   }
@@ -121,6 +86,8 @@ const processMessages = async (
   if (messages.length === 0) {
     return;
   }
+
+  const config = ConfigService.getConfig();
   logger.log("Processing messages", messages);
   for (const message of messages) {
     if (processedMessageIds.has(message.id)) {
@@ -151,13 +118,10 @@ const processMessages = async (
       };
 
       // Store the message in SDK storage
-      const storage = await sdk.storage.get();
-      const storedMessages = storage.messages || [];
-      storedMessages.push(payload);
-      await sdk.storage.set({ ...storage, messages: storedMessages });
+      await ConfigService.addMessage(payload);
 
       const alias =
-        storage.connections.find(
+        config.connections.find(
           (c) => c.fingerprint === message.from_public_key,
         )?.alias || message.from_public_key.slice(0, 6) + "...";
 
@@ -167,10 +131,7 @@ const processMessages = async (
           name: alias,
           description: generateSummary(payload),
           claim: () => {
-            const event = new CustomEvent("drop:claim", {
-              detail: { payload: payload, alias: alias },
-            });
-            document.dispatchEvent(event);
+            eventBus.emit("drop:claim", { payload: payload, alias: alias });
             toast.removeAllGroups();
             sdk.window.showToast("Claimed message", {
               variant: "success",
@@ -178,10 +139,7 @@ const processMessages = async (
             });
           },
           delete: () => {
-            const event = new CustomEvent("drop:delete", {
-              detail: { payload: payload, alias: alias },
-            });
-            document.dispatchEvent(event);
+            eventBus.emit("drop:delete", { payload: payload, alias: alias });
             toast.removeAllGroups();
             sdk.window.showToast("Deleted message", {
               variant: "info",
@@ -190,7 +148,7 @@ const processMessages = async (
           },
         },
         life: 10000,
-      });
+      } as CustomToastMessageOptions);
 
       processedMessageIds.add(message.id);
     } catch (error) {
@@ -236,13 +194,13 @@ const generateSummary = (message: DropPayload) => {
 };
 
 const decryptMessage = async (message: DropMessage): Promise<string> => {
-  const storage = await sdk.storage.get();
-  if (!storage.pgpKeyPair) {
+  const config = ConfigService.getConfig();
+  if (!config.pgpKeyPair) {
     throw new Error("No PGP key pair configured");
   }
 
   const privateKey = await readPrivateKey({
-    armoredKey: storage.pgpKeyPair.privateKey,
+    armoredKey: config.pgpKeyPair.privateKey,
   });
 
   const messageData = await readMessage({
@@ -254,17 +212,17 @@ const decryptMessage = async (message: DropMessage): Promise<string> => {
     decryptionKeys: privateKey,
   });
 
-  return decrypted.toString();
+  return String(decrypted);
 };
 
 const createSignature = async (data: string): Promise<string> => {
-  const storage = await sdk.storage.get();
-  if (!storage.pgpKeyPair) {
+  const config = ConfigService.getConfig();
+  if (!config.pgpKeyPair) {
     throw new Error("No PGP key pair configured");
   }
 
   const privateKey = await readPrivateKey({
-    armoredKey: storage.pgpKeyPair.privateKey,
+    armoredKey: config.pgpKeyPair.privateKey,
   });
 
   const signature = await sign({
@@ -273,51 +231,68 @@ const createSignature = async (data: string): Promise<string> => {
     detached: true,
   });
 
-  return signature.toString();
+  return String(signature);
 };
 
-const handleClaimEvent = async (event: CustomEvent) => {
-  logger.log("Handling claim event", event);
-  const { payload, alias: friendAlias } = event.detail;
+const handleClaimEvent = async (data: {
+  payload: DropPayload;
+  alias: string;
+}) => {
+  logger.log("Handling claim event", data);
+  const { payload, alias: friendAlias } = data;
+  if (!payload.objects || payload.objects.length === 0) {
+    logger.log("No objects in payload", payload);
+    return;
+  }
+
   logger.log("Processing claim message", payload);
-  switch (payload.objects[0].type) {
+  switch (payload.objects[0]?.type) {
     case "Replay":
       await claimReplay(sdk, payload, friendAlias);
-      handleDeleteEvent(event);
+      handleDeleteEvent(data);
       break;
     case "Scope":
       await claimScope(sdk, payload, friendAlias);
-      handleDeleteEvent(event);
+      handleDeleteEvent(data);
       break;
     case "Tamper":
       await claimTamper(sdk, payload, friendAlias);
-      handleDeleteEvent(event);
+      handleDeleteEvent(data);
       break;
     case "Filter":
       await claimFilter(sdk, payload, friendAlias);
-      handleDeleteEvent(event);
+      handleDeleteEvent(data);
       break;
     default:
-      logger.log("Unknown claim type", payload.objects[0].type);
+      logger.log("Unknown claim type", payload.objects[0]?.type);
       break;
   }
 };
 
-const handleDeleteEvent = async (event: CustomEvent) => {
-  const { payload } = event.detail;
+const handleDeleteEvent = async (data: { payload: DropPayload }) => {
+  const { payload } = data;
   logger.log("Processing delete message", payload);
-  const { id } = payload;
-  const storage = await sdk.storage.get();
-  const index = storage.messages?.findIndex((m) => m.id === id);
-  if (index !== -1) {
-    storage.messages?.splice(index, 1);
-    await sdk.storage.set({ ...storage });
+
+  try {
+    const config = ConfigService.getConfig();
+    if (config.messages) {
+      const updatedMessages = config.messages.filter(
+        (m) => m.id !== payload.id,
+      );
+      await ConfigService.updateConfig({ messages: updatedMessages });
+    }
+  } catch (err) {
+    logger.error("Failed to delete message", err);
   }
 };
 
-const handleDropEvent = async (event: CustomEvent) => {
-  logger.log("Handling drop event", event);
-  const { payload, connection, type } = event.detail;
+const handleDropEvent = async (data: {
+  payload: DropPayload;
+  type: "Tamper" | "Replay" | "Filter" | "Scope";
+  connection: DropConnection;
+}) => {
+  logger.log("Handling drop event", data);
+  const { payload, connection, type } = data;
   logger.log("Processing payload and connection", { payload, connection });
 
   try {
@@ -337,7 +312,7 @@ const handleDropEvent = async (event: CustomEvent) => {
     const message = await createMessage({ text: JSON.stringify(payload) });
     logger.log("Reading public key");
     const publicKey = await readKey({ armoredKey: connection.publicKey });
-    publicKey.getPrimaryUser = async () =>
+    publicKey.getPrimaryUser = () =>
       ({
         index: 0,
         user: {
@@ -368,35 +343,23 @@ const handleDropEvent = async (event: CustomEvent) => {
     });
     const timestamp = Math.floor(Date.now() / 1000);
     logger.log("Creating signature");
+    const encryptedDataString = String(encryptedData);
     const signature = await createSignature(
-      `${
-        connection.fingerprint
-      }|${encryptedData.toString()}|${timestamp.toString()}`,
+      `${connection.fingerprint}|${encryptedDataString}|${timestamp.toString()}`,
     );
 
     // Create the message
     logger.log("Creating drop message");
     const dropMessage: DropSendMessage = {
       to_public_key: connection.fingerprint,
-      encrypted_data: encryptedData.toString(),
+      encrypted_data: encryptedDataString,
       timestamp: timestamp,
       signature: signature,
     };
 
     // Send the message
-    const storage = await sdk.storage.get();
     logger.log("Sending drop message", dropMessage);
-    const response = await fetch(`${storage.apiServer}/api/v1/send`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(dropMessage),
-    });
-
-    if (!response.ok) {
-      throw new Error(`Failed to send message: ${response.statusText}`);
-    }
+    await DropAPI.sendMessage(dropMessage);
 
     const displayType = type === "Tamper" ? "M&R Rule" : type;
     sdk.window.showToast(
@@ -415,7 +378,6 @@ const handleDropEvent = async (event: CustomEvent) => {
   }
 };
 
-// Export public API
 export const useDrop = () => {
   sdk = useSDK();
 
@@ -423,9 +385,9 @@ export const useDrop = () => {
     fingerprint: string,
     alias: string,
   ): Promise<void> => {
-    const storage = await sdk.storage.get();
+    const config = ConfigService.getConfig();
     const publicKey = await fetch(
-      `${storage.keyServer}/vks/v1/by-fingerprint/${fingerprint}`,
+      `${config.keyServer}/vks/v1/by-fingerprint/${fingerprint}`,
     ).then((res) => res.text());
     const connection: DropConnection = {
       alias,
@@ -433,41 +395,53 @@ export const useDrop = () => {
       publicKey,
     };
 
-    storage.connections.push(connection);
-    await sdk.storage.set({ ...storage });
+    config.connections.push(connection);
+    await ConfigService.updateConfig({ ...config });
   };
 
   const removeConnection = async (fingerprint: string): Promise<void> => {
-    const storage = await sdk.storage.get();
-    storage.connections = storage.connections.filter(
+    const config = ConfigService.getConfig();
+    config.connections = config.connections.filter(
       (conn) => conn.fingerprint !== fingerprint,
     );
-    await sdk.storage.set({ ...storage });
+    await ConfigService.updateConfig({ ...config });
   };
+
   // Initialize the plugin
-  const initializeDrop = async (toast: ReturnType<typeof useToast>) => {
+  const initializeDrop = (toast: ReturnType<typeof useToast>) => {
     if (isDev) {
-      const storage = await sdk.storage.get();
-      sdk.storage.set({ ...storage, apiServer: "http://localhost:8787" });
+      const config = ConfigService.getConfig();
+      ConfigService.updateConfig({
+        ...config,
+        apiServer: "http://localhost:8787",
+      });
     }
+
     // Set up event listener for drop events
-    document.addEventListener("drop:send", ((
-      event: CustomEvent<{ payload: DropPayload; connection: DropConnection }>,
-    ) => {
-      handleDropEvent(event);
-    }) as EventListener);
+    eventBus.on(
+      "drop:send",
+      (data: {
+        payload: DropPayload;
+        connection: DropConnection;
+        type: DropType;
+      }) => {
+        handleDropEvent(data);
+      },
+    );
 
-    document.addEventListener("drop:claim", ((
-      event: CustomEvent<{ payload: DropPayload }>,
-    ) => {
-      handleClaimEvent(event);
-    }) as EventListener);
+    eventBus.on(
+      "drop:claim",
+      (data: { payload: DropPayload; alias: string }) => {
+        handleClaimEvent(data);
+      },
+    );
 
-    document.addEventListener("drop:delete", ((
-      event: CustomEvent<{ payload: DropPayload }>,
-    ) => {
-      handleDeleteEvent(event);
-    }) as EventListener);
+    eventBus.on(
+      "drop:delete",
+      (data: { payload: DropPayload; alias: string }) => {
+        handleDeleteEvent(data);
+      },
+    );
 
     // Start polling for new messages
     startPolling(toast);
@@ -478,7 +452,6 @@ export const useDrop = () => {
     const { privateKey, publicKey } = await generateKey({
       type: "rsa",
       rsaBits: 3072,
-      //config: {v6Keys: true}
       userIDs: [
         { name: "CaidoDrop", email: "drop@caido.io", comment: "CaidoDrop" },
       ],
@@ -488,11 +461,11 @@ export const useDrop = () => {
     const armoredPrivateKey = privateKey;
 
     // Upload the public key to the keyserver
-    await uploadKeyToKeyserver(armoredPublicKey);
+    await DropAPI.uploadKey(armoredPublicKey);
 
     // Parse the public key to get the fingerprint
     const parsedPublicKey = await readKey({ armoredKey: armoredPublicKey });
-    const fingerprint = (await parsedPublicKey.getFingerprint()).toUpperCase();
+    const fingerprint = parsedPublicKey.getFingerprint().toUpperCase();
 
     const keyPair = {
       publicKey: armoredPublicKey,
@@ -502,9 +475,9 @@ export const useDrop = () => {
 
     // Save the key pair to storage
     logger.log("[generatePGPKeyPair] Saving key pair to storage", keyPair, sdk);
-    const storage = await sdk.storage.get();
-    storage.pgpKeyPair = keyPair;
-    await sdk.storage.set({ ...storage });
+    const config = ConfigService.getConfig();
+    config.pgpKeyPair = keyPair;
+    await ConfigService.updateConfig({ ...config });
 
     return keyPair;
   };

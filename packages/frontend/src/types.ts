@@ -1,6 +1,16 @@
 import { type Caido } from "@caido/sdk-frontend";
+import { type ToastMessageOptions } from "primevue/toast";
 
-export type FrontendSDK = Caido<{}, {}>;
+export type FrontendSDK = Caido<any, any>;
+
+export interface CustomToastMessageOptions extends ToastMessageOptions {
+  data: {
+    name: string;
+    description: string;
+    claim: () => void;
+    delete: () => void;
+  };
+}
 
 export interface PGPKeyPair {
   publicKey: string;
@@ -41,6 +51,8 @@ export interface DropPayload {
     from_public_key: string;
   };
 }
+
+export type DropType = "Tamper" | "Replay" | "Filter" | "Scope";
 
 export interface DropPluginConfig {
   pgpKeyPair?: PGPKeyPair;

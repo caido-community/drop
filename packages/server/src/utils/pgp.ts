@@ -10,7 +10,7 @@ const VKS_API_URL = "https://keys.openpgp.org/vks/v1/by-fingerprint/";
 const CACHE_TTL = 600; // 10 minutes
 
 export async function validatePublicKey(
-  fingerprint: string | null,
+  fingerprint: string | undefined,
 ): Promise<KeyValidationResult> {
   let armoredKey = "";
   let key = null;
@@ -83,7 +83,7 @@ export async function validatePublicKey(
       ).run(formattedFingerprint, status, armoredKey);
     }
 
-    return { status, key };
+    return { status, key: key || undefined };
   } catch (error) {
     logger.error(
       { error, fingerprint: formattedFingerprint },
@@ -128,8 +128,12 @@ export async function verifySignature(
       "Key details",
     );
 
-    key.getPrimaryUser = async () =>
-      ({ user: {}, selfCertification: {}, index: 0 }) as PrimaryUser; // Hack to force validation on userId-less object.
+    key.getPrimaryUser = () =>
+      Promise.resolve({
+        user: {},
+        selfCertification: {},
+        index: 0,
+      }) as Promise<PrimaryUser>; // Hack to force validation on userId-less object.
 
     const verification = await openpgp.verify({
       message,

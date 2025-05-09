@@ -4,16 +4,19 @@ import ToastService from "primevue/toastservice";
 import { createApp } from "vue";
 
 import { DOMInjectionManager } from "./dom/DOMInjectionManager";
+import { SDKPlugin } from "./plugins/sdk";
+import "./styles/customInjectionGlobal.css";
+import "./styles/index.css";
 import { logger } from "./utils/logger";
 import App from "./views/App.vue";
-import "./styles/index.css";
-import "./styles/customInjectionGlobal.css";
-import { SDKPlugin } from "./plugins/sdk";
 
+import { ConfigService, initConfigService } from "@/services/configService";
 import { defaultStorage, type FrontendSDK } from "@/types";
 
 export const init = async (sdk: FrontendSDK) => {
-  const storage = await sdk.storage.get();
+  initConfigService(sdk);
+
+  const storage = ConfigService.getConfig();
   if (!storage) {
     await sdk.storage.set(defaultStorage);
     logger.log("Storage not found, setting default storage");

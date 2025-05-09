@@ -6,7 +6,9 @@ import { computed, onMounted, ref } from "vue";
 
 import { useDrop } from "@/plugins/drop";
 import { useSDK } from "@/plugins/sdk";
+import { ConfigService } from "@/services/configService";
 import { defaultStorage, type DropPluginConfig } from "@/types";
+import { fetchUserName } from "@/utils/caido";
 import { logger } from "@/utils/logger";
 const sdk = useSDK();
 const { generatePGPKeyPair, addConnection, removeConnection } = useDrop();
@@ -15,15 +17,15 @@ const newConnectionShareCode = ref("");
 const isGeneratingKey = ref(false);
 const keyGenerationError = ref("");
 const userAlias = ref("");
-const editingConnection = ref<string | null>(null);
+const editingConnection = ref<string | undefined>(undefined);
 const editedAlias = ref("");
 const apiServer = ref("");
 const keyserver = ref("");
 const showAdvancedOptions = ref(false);
 
 const localConfig = ref<DropPluginConfig>(defaultStorage);
-sdk.storage.onChange((storage) => {
-  localConfig.value = storage;
+ConfigService.onConfigChange((config: DropPluginConfig) => {
+  localConfig.value = config;
 });
 
 const encodedAlias = computed(() => {
@@ -147,75 +149,7 @@ const copyFingerprint = (e?: Event) => {
 
 const updateUserAlias = async () => {
   if (userAlias.value) {
-    const storage = await sdk.storage.get();
-    storage.alias = userAlias.value;
-    await sdk.storage.set({ ...storage });
-  }
-};
-
-const fetchUserName = async () => {
-  try {
-    const auth = JSON.parse(
-      localStorage.getItem("CAIDO_AUTHENTICATION") || "{}",
-    );
-    const accessToken = auth.accessToken;
-
-    if (!accessToken) {
-      throw new Error("No access token found");
-    }
-
-    const response = await fetch("/graphql", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${accessToken}`,
-      },
-      body: JSON.stringify({
-        query: `query Viewer {
-          viewer {
-            ...on CloudUser {
-              profile {
-                identity {
-                  name
-                }
-              }
-            }
-          }
-        }`,
-        operationName: "Viewer",
-      }),
-    });
-
-    const data = await response.json();
-    if (!data?.data?.viewer?.profile?.identity?.name) {
-      logger.log("[DROP] Failed to fetch user name.  Trying legacy endpoint:");
-      const response = await fetch("/graphql", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
-        },
-        body: JSON.stringify({
-          query: `query Viewer {
-            viewer {
-              profile {
-                identity {
-                  name
-                }
-              }
-            }
-          }`,
-          operationName: "Viewer",
-        }),
-      });
-
-      const data = await response.json();
-      return data?.data?.viewer?.profile?.identity?.name || "Caido User";
-    }
-    return data?.data?.viewer?.profile?.identity?.name;
-  } catch (err) {
-    logger.error("Failed to fetch user name:", err);
-    return "Caido User";
+    await ConfigService.updateConfig({ alias: userAlias.value });
   }
 };
 
@@ -223,13 +157,15 @@ const onUpdateConnectionAlias = async (fingerprint: string) => {
   if (!editedAlias.value) return;
 
   try {
-    const storage = await sdk.storage.get();
-    const connection = storage.connections.find(
+    const config = ConfigService.getConfig();
+    const connection = config.connections.find(
       (c) => c.fingerprint === fingerprint,
     );
     if (connection) {
       connection.alias = editedAlias.value;
-      await sdk.storage.set({ ...storage });
+      await ConfigService.updateConfig({
+        connections: config.connections,
+      });
     }
   } catch (error) {
     logger.error("Failed to update connection alias:", error);
@@ -241,10 +177,14 @@ const onUpdateConnectionAlias = async (fingerprint: string) => {
 
 const updateServerConfig = async () => {
   try {
-    const storage = await sdk.storage.get();
-    storage.apiServer = apiServer.value;
-    storage.keyServer = keyserver.value;
-    await sdk.storage.set({ ...storage });
+    const config = ConfigService.getConfig();
+    config.apiServer = apiServer.value;
+    config.keyServer = keyserver.value;
+    await ConfigService.updateConfig({
+      apiServer: apiServer.value,
+      keyServer: keyserver.value,
+    });
+
     sdk.window.showToast("Server configuration updated successfully.", {
       variant: "success",
       duration: 2000,
@@ -263,31 +203,33 @@ const handleServerConfigChange = () => {
 };
 
 onMounted(async () => {
-  let storage = await sdk.storage.get();
-  localConfig.value = storage;
-  logger.log("Settings' Storage", storage);
+  const config = ConfigService.getConfig();
+  localConfig.value = config;
+
+  logger.log("Settings' Storage", config);
 
   // Set initial values for servers
-  apiServer.value = storage.apiServer || "";
-  keyserver.value = storage.keyServer || "";
+  apiServer.value = config.apiServer || "";
+  keyserver.value = config.keyServer || "";
 
   // Set initial alias from config if it exists
-  if (storage.alias) {
-    userAlias.value = storage.alias;
+  if (config.alias) {
+    userAlias.value = config.alias;
   } else {
-    // If no stored alias, fetch from API
     const name = await fetchUserName();
     if (name) {
       userAlias.value = name;
-      await sdk.storage.set({ ...storage, alias: name });
+      await ConfigService.updateConfig({ alias: name });
     }
   }
-  if (!storage.pgpKeyPair) {
+
+  if (!config.pgpKeyPair) {
     onGenerateKey(true);
   }
-  if (storage.firstOpen) {
-    storage.firstOpen = false;
-    await sdk.storage.set({ ...storage });
+
+  if (config.firstOpen) {
+    config.firstOpen = false;
+    await ConfigService.updateConfig({ firstOpen: false });
   }
 });
 </script>

@@ -7,12 +7,14 @@ import { onMounted, ref } from "vue";
 
 import { useDrop } from "@/plugins/drop";
 import { useSDK } from "@/plugins/sdk";
+import { ConfigService } from "@/services/configService";
 import { type DropPayload, type DropPluginConfig } from "@/types";
+import { eventBus } from "@/utils/eventBus";
 import { logger } from "@/utils/logger";
 
 const { generateSummary } = useDrop();
 const sdk = useSDK();
-const localConfig = ref<DropPluginConfig | null>(null);
+const localConfig = ref<DropPluginConfig | undefined>(undefined);
 
 sdk.storage.onChange((storage) => {
   localConfig.value = storage as unknown as DropPluginConfig;
@@ -24,7 +26,7 @@ const messages = ref<DropPayload[]>([]);
 const isLoading = ref(false);
 const error = ref("");
 
-const loadMessages = async () => {
+const loadMessages = () => {
   try {
     if (localConfig.value) {
       const currentConfig = JSON.parse(
@@ -39,11 +41,11 @@ const loadMessages = async () => {
   }
 };
 
-const onRefresh = async () => {
+const onRefresh = () => {
   isLoading.value = true;
   error.value = "";
   try {
-    await loadMessages();
+    loadMessages();
   } catch (err) {
     error.value = "Failed to refresh messages";
     logger.error(err);
@@ -53,21 +55,19 @@ const onRefresh = async () => {
 };
 
 // Load initial messages
-onMounted(async () => {
-  const data = await sdk.storage.get();
-  localConfig.value = data as unknown as DropPluginConfig;
-  await loadMessages();
+onMounted(() => {
+  const config = ConfigService.getConfig();
+  localConfig.value = config;
+
+  loadMessages();
 });
 
-const onClaim = async (message: DropPayload) => {
+const onClaim = (message: DropPayload) => {
   logger.log("[onClaim] Processing claim message", message);
-  const event = new CustomEvent("drop:claim", {
-    detail: {
-      payload: message,
-      alias: getSenderAlias(message.message_metadata?.from_public_key || ""),
-    },
+  eventBus.emit("drop:claim", {
+    payload: message,
+    alias: getSenderAlias(message.message_metadata?.from_public_key || ""),
   });
-  document.dispatchEvent(event);
 };
 
 const onDelete = async (message: DropPayload) => {
@@ -80,7 +80,7 @@ const onDelete = async (message: DropPayload) => {
         (m) => m.id !== message.id,
       );
       currentConfig.messages = updatedMessages;
-      await sdk.storage.set(currentConfig);
+      await ConfigService.updateConfig({ messages: updatedMessages });
       messages.value = updatedMessages;
     }
   } catch (err) {
@@ -92,11 +92,7 @@ const onDelete = async (message: DropPayload) => {
 const onDeleteAll = async () => {
   try {
     if (localConfig.value) {
-      const currentConfig = JSON.parse(
-        JSON.stringify(localConfig.value),
-      ) as DropPluginConfig;
-      currentConfig.messages = [];
-      await sdk.storage.set(currentConfig);
+      await ConfigService.updateConfig({ messages: [] });
       messages.value = [];
     }
   } catch (err) {
@@ -105,9 +101,9 @@ const onDeleteAll = async () => {
   }
 };
 
-const onClaimAll = async () => {
+const onClaimAll = () => {
   messages.value.forEach(async (message) => {
-    await onClaim(message);
+    onClaim(message);
     await new Promise((resolve) => setTimeout(resolve, 500));
   });
 };

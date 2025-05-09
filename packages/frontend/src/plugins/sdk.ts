@@ -1,34 +1,14 @@
+import type { Caido } from "@caido/sdk-frontend";
 import { inject, type InjectionKey, type Plugin } from "vue";
 
-import { type FrontendSDK } from "@/types";
-import { logger } from "@/utils/logger";
+type CaidoSDK = Caido<any, any>;
 
-const KEY: InjectionKey<FrontendSDK> = Symbol("FrontendSDK");
-let isInitialized = false;
+const KEY: InjectionKey<CaidoSDK> = Symbol("CaidoSDK");
 
-// This is the plugin that will provide the FrontendSDK to VueJS
-// To access the frontend SDK from within a component, use the `useSDK` function.
-export const SDKPlugin: Plugin = (app, sdk: FrontendSDK) => {
-  if (!sdk) {
-    throw new Error("SDK must be provided to SDKPlugin");
-  }
+export const SDKPlugin: Plugin = (app, sdk: CaidoSDK) => {
   app.provide(KEY, sdk);
-  isInitialized = true;
-  logger.log("[SDK] Initialized successfully");
 };
 
-// This is the function that will be used to access the FrontendSDK from within a component.
 export const useSDK = () => {
-  if (!isInitialized) {
-    throw new Error(
-      "SDK not initialized. Make sure SDKPlugin is installed first.",
-    );
-  }
-  const sdk = inject(KEY);
-  if (!sdk) {
-    throw new Error(
-      "SDK not found in Vue context. Make sure SDKPlugin is installed.",
-    );
-  }
-  return sdk;
+  return inject(KEY) as CaidoSDK;
 };
