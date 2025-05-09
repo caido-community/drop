@@ -1,3 +1,5 @@
+import { type Key } from "openpgp";
+
 export interface Message {
   id: number;
   from_public_key: string;
@@ -7,7 +9,7 @@ export interface Message {
 
 export interface KeyValidationResult {
   status: "valid" | "revoked" | "not_found";
-  key?: any; // openpgp.Key
+  key?: Key;
 }
 
 export interface ErrorResponse {

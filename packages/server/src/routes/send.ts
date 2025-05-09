@@ -1,10 +1,10 @@
-import { Request, Response } from "express";
+import { type Request, type Response } from "express";
 import { z } from "zod";
 
-import { ErrorResponse } from "../types";
-import { validatePublicKey, verifySignature } from "../utils/pgp";
-import logger from "../utils/logger";
+import { type ErrorResponse } from "../types";
 import db from "../utils/db";
+import logger from "../utils/logger";
+import { validatePublicKey, verifySignature } from "../utils/pgp";
 
 const SendRequestSchema = z.object({
   to_public_key: z.string().regex(/^[A-Fa-f0-9]{40}$/),
@@ -85,10 +85,11 @@ export default async (req: Request, res: Response) => {
         "Message stored successfully",
       );
       return res.status(201).send();
-    } catch (error: any) {
+    } catch (error: unknown) {
       if (
-        error.message === "Signature verification failed" ||
-        error.message === "Timestamp validation failed"
+        error instanceof Error &&
+        (error.message === "Signature verification failed" ||
+          error.message === "Timestamp validation failed")
       ) {
         logger.warn({ error: error.message }, "Invalid signature or timestamp");
         return res
