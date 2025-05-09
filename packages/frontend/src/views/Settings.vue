@@ -62,7 +62,7 @@ const onGenerateKey = async (nocopy: boolean = false) => {
 
 const onAddConnection = async (
   event?: ClipboardEvent,
-  shareCodeOverride?: string,
+  shareCodeOverride?: string
 ) => {
   if (event) {
     const pastedContent = event.clipboardData?.getData("text") || "";
@@ -100,7 +100,7 @@ const onAddConnection = async (
   try {
     const connectionAlias = alias
       ? new TextDecoder().decode(
-          Uint8Array.from(atob(alias), (c) => c.charCodeAt(0)),
+          Uint8Array.from(atob(alias), (c) => c.charCodeAt(0))
         )
       : prompt("Please enter your friend's alias:");
     if (!connectionAlias) {
@@ -159,7 +159,7 @@ const onUpdateConnectionAlias = async (fingerprint: string) => {
   try {
     const config = ConfigService.getConfig();
     const connection = config.connections.find(
-      (c) => c.fingerprint === fingerprint,
+      (c) => c.fingerprint === fingerprint
     );
     if (connection) {
       connection.alias = editedAlias.value;
@@ -170,7 +170,7 @@ const onUpdateConnectionAlias = async (fingerprint: string) => {
   } catch (error) {
     logger.error("Failed to update connection alias:", error);
   } finally {
-    editingConnection.value = null;
+    editingConnection.value = undefined;
     editedAlias.value = "";
   }
 };
