@@ -7,7 +7,6 @@
   },
   "dependencies": {
     "@caido/primevue": "0.1.2",
-    "crypto-js": "4.2.0",
     "mitt": "3.0.1",
     "openpgp": "6.1.0",
     "pinia": "3.0.2",

@@ -1,4 +1,3 @@
-import { SHA256 } from "crypto-js";
 import {
   createMessage,
   decrypt,
@@ -100,13 +99,13 @@ const processMessages = async (
       const payload = JSON.parse(decryptedData) as DropPayload;
 
       // Verify SHA256 hash
-      const calculatedHash = SHA256(
+      const calculatedHash = await calculateSHA256(
         JSON.stringify({
           id: payload.id,
           objects: payload.objects,
           notes: payload.notes,
         }),
-      ).toString();
+      );
 
       if (calculatedHash !== payload.sha256) {
         throw new Error("Hash verification failed");
@@ -234,6 +233,16 @@ const createSignature = async (data: string): Promise<string> => {
   return String(signature);
 };
 
+const calculateSHA256 = async (data: string): Promise<string> => {
+  const hashBuffer = await crypto.subtle.digest(
+    "SHA-256",
+    new TextEncoder().encode(data),
+  );
+  return Array.from(new Uint8Array(hashBuffer))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+};
+
 const handleClaimEvent = async (data: {
   payload: DropPayload;
   alias: string;
@@ -298,13 +307,13 @@ const handleDropEvent = async (data: {
   try {
     // Calculate SHA256 hash
     logger.log("Calculating SHA256 hash for payload");
-    payload.sha256 = SHA256(
+    payload.sha256 = await calculateSHA256(
       JSON.stringify({
         id: payload.id,
         objects: payload.objects,
         notes: payload.notes,
       }),
-    ).toString();
+    );
     logger.log("Generated SHA256 hash:", payload.sha256);
 
     // Encrypt the payload
