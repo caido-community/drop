@@ -1,7 +1,7 @@
 import { type Caido } from "@caido/sdk-frontend";
 import { type ToastMessageOptions } from "primevue/toast";
 
-export type FrontendSDK = Caido<any, any>;
+export type FrontendSDK = Caido<never, never>;
 
 export interface CustomToastMessageOptions extends ToastMessageOptions {
   data: {
@@ -42,6 +42,7 @@ export interface DropPayload {
   id: string;
   objects: Array<{
     type: string;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     value: any;
   }>;
   notes: string;

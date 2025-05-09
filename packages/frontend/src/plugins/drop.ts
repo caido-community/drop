@@ -335,6 +335,7 @@ const handleDropEvent = async (data: {
           keyFlags: new Uint8Array([0x01]),
           isValid: () => true,
         },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
       }) as any; // Hack to make opengpg work with userID-less keys
     logger.log("Encrypting message");
     const encryptedData = await encrypt({
