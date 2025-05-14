@@ -1,10 +1,10 @@
-import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import express from "express";
 
-import logger from "./utils/logger";
 import routes from "./routes";
 import { cleanupOldMessages } from "./utils/cleanup";
+import logger from "./utils/logger";
 
 dotenv.config();
 
@@ -20,10 +20,10 @@ app.use(routes);
 
 // Schedule cleanup job to run every 24 hours
 const ONE_DAY_MS = 24 * 60 * 60 * 1000;
-const runCleanup = async () => {
+const runCleanup = () => {
   logger.info("Starting scheduled cleanup of old messages");
   try {
-    const deletedCount = await cleanupOldMessages();
+    const deletedCount = cleanupOldMessages();
     logger.info({ deletedCount }, "Completed scheduled cleanup");
   } catch (error) {
     logger.error({ error }, "Failed to run scheduled cleanup");

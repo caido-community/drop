@@ -1,6 +1,16 @@
-import { Caido } from "@caido/sdk-frontend";
+import { type Caido } from "@caido/sdk-frontend";
+import { type ToastMessageOptions } from "primevue/toast";
 
-export type FrontendSDK = Caido<{}, {}>;
+export type FrontendSDK = Caido<never, never>;
+
+export interface CustomToastMessageOptions extends ToastMessageOptions {
+  data: {
+    name: string;
+    description: string;
+    claim: () => void;
+    delete: () => void;
+  };
+}
 
 export interface PGPKeyPair {
   publicKey: string;
@@ -24,7 +34,7 @@ export interface DropMessage {
 export interface DropSendMessage {
   to_public_key: string;
   encrypted_data: string;
-  timestamp: string;
+  timestamp: number;
   signature: string;
 }
 
@@ -32,6 +42,7 @@ export interface DropPayload {
   id: string;
   objects: Array<{
     type: string;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     value: any;
   }>;
   notes: string;
@@ -41,6 +52,8 @@ export interface DropPayload {
     from_public_key: string;
   };
 }
+
+export type DropType = "Tamper" | "Replay" | "Filter" | "Scope";
 
 export interface DropPluginConfig {
   pgpKeyPair?: PGPKeyPair;
@@ -59,5 +72,5 @@ export const defaultStorage: DropPluginConfig = {
   alias: undefined,
   apiServer: "https://drop.cai.do",
   keyServer: "https://keys.openpgp.org/",
-  firstOpen: true
+  firstOpen: true,
 };

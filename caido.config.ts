@@ -1,18 +1,19 @@
+import path from "path";
+
+import tailwindCaido from "@caido/tailwindcss";
 import { defineConfig } from "@caido-community/dev";
 import vue from "@vitejs/plugin-vue";
+import prefixwrap from "postcss-prefixwrap";
 import tailwindcss from "tailwindcss";
 // @ts-expect-error no declared types at this time
 import tailwindPrimeui from "tailwindcss-primeui";
-import tailwindCaido from "@caido/tailwindcss";
-import path from "path";
-import prefixwrap from "postcss-prefixwrap";
 
 const id = "drop";
 export default defineConfig({
   id,
   name: "Drop",
   description: "Drop - a plugin for collaboration in Caido.",
-  version: "0.1.1",
+  version: "0.1.2",
   author: {
     name: "Justin Gardner",
     email: "justin@caido.io",
