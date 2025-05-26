@@ -8,7 +8,7 @@
   "dependencies": {
     "@caido/primevue": "0.1.2",
     "mitt": "3.0.1",
-    "openpgp": "6.1.0",
+    "openpgp": "6.1.1",
     "pinia": "3.0.2",
     "primevue": "4.1.0",
     "uuid": "11.1.0",

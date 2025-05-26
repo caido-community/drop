@@ -55,8 +55,8 @@ importers:
         specifier: 3.0.1
         version: 3.0.1
       openpgp:
-        specifier: 6.1.0
-        version: 6.1.0
+        specifier: 6.1.1
+        version: 6.1.1
       pinia:
         specifier: 3.0.2
         version: 3.0.2(typescript@5.5.4)(vue@3.5.13(typescript@5.5.4))
@@ -107,8 +107,8 @@ importers:
         specifier: 5.1.0
         version: 5.1.0
       openpgp:
-        specifier: 6.1.0
-        version: 6.1.0
+        specifier: 6.1.1
+        version: 6.1.1
       pino:
         specifier: 9.6.0
         version: 9.6.0
@@ -2738,8 +2738,8 @@ packages:
     resolution: {integrity: sha512-kbpaSSGJTWdAY5KPVeMOKXSrPtr8C8C7wodJbcsd51jRnmD+GZu8Y0VoU6Dm5Z4vWr0Ig/1NKuWRKf7j5aaYSg==}
     engines: {node: '>=6'}
 
-  openpgp@6.1.0:
-    resolution: {integrity: sha512-fRTeitP+hoGJD3kbdUlAI++wE6MvfvXw1rBqHwmBMxIpLjowatJ2zb5ThkORpIkSz5F12wO+xCYRSTbT7M4qKA==}
+  openpgp@6.1.1:
+    resolution: {integrity: sha512-V/DXZ5AGCz3q4X8psUSc3q4SxnH/bfICaTSpNcla7wvBFhrxa9/ajm31rtMwZ1qj7Fu2oMpfX6ZcxKmTBlb6Yg==}
     engines: {node: '>= 18.0.0'}
 
   optionator@0.9.4:
@@ -6808,7 +6808,7 @@ snapshots:
     dependencies:
       mimic-fn: 2.1.0
 
-  openpgp@6.1.0: {}
+  openpgp@6.1.1: {}
 
   optionator@0.9.4:
     dependencies:
