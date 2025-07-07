@@ -151,15 +151,15 @@ export async function verifySignature(
       throw new Error("Signature verification failed");
     }
 
-    // Verify timestamp is within 15 seconds
+    // Verify timestamp is within 60 seconds
     const currentTime = Math.floor(Date.now() / 1000);
-    if (Math.abs(currentTime - timestamp) > 15) {
+    if (Math.abs(currentTime - timestamp) > 60) {
       throw new Error("Timestamp validation failed");
     }
 
     return fingerprint;
   } catch (error) {
-    logger.error({ error }, "Error verifying signature");
+    logger.error({ error:error.message }, "Error verifying signature");
     throw error;
   }
 }

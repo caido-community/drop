@@ -26,7 +26,7 @@ const runCleanup = () => {
     const deletedCount = cleanupOldMessages();
     logger.info({ deletedCount }, "Completed scheduled cleanup");
   } catch (error) {
-    logger.error({ error }, "Failed to run scheduled cleanup");
+    logger.error({ error: error.message }, "Failed to run scheduled cleanup");
   }
 };
 

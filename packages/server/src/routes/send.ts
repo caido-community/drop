@@ -22,7 +22,7 @@ export default async (req: Request, res: Response) => {
     try {
       body = SendRequestSchema.parse(req.body);
     } catch (error) {
-      logger.warn({ error }, "Missing required fields in send request");
+      logger.warn({ error:error.message }, "Missing required fields in send request");
       return res
         .status(400)
         .json({ error: "Missing required fields" } as ErrorResponse);
@@ -99,7 +99,7 @@ export default async (req: Request, res: Response) => {
       throw error;
     }
   } catch (error) {
-    logger.error({ error }, "Error handling send request");
+    logger.error({ error:error.message }, "Error handling send request");
     return res
       .status(500)
       .json({ error: "Internal server error" } as ErrorResponse);
