@@ -13,7 +13,7 @@ export default defineConfig({
   id,
   name: "Drop",
   description: "Drop - a plugin for collaboration in Caido.",
-  version: "0.1.3",
+  version: "0.1.5",
   author: {
     name: "Justin Gardner",
     email: "justin@caido.io",
