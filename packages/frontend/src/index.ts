@@ -53,7 +53,6 @@ export const init = async (sdk: FrontendSDK) => {
     icon: "fas fa-droplet",
   });
 
-  // @ts-expect-error - DropToButton is a valid component
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   sdk.replay.addToSlot("session-toolbar-secondary", {
     type: "Custom",
