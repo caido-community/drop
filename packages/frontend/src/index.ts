@@ -54,10 +54,7 @@ export const init = async (sdk: FrontendSDK) => {
   });
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  sdk.replay.addToSlot("session-toolbar-secondary", {
-    type: "Custom",
-    component: DropToButton as any,
-  });
+  sdk.replay.addToSlot("session-toolbar-secondary", {type: "Custom", component: DropToButton as any});
 
   const domInjectionManager = new DOMInjectionManager(sdk);
   domInjectionManager.start();
