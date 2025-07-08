@@ -15,7 +15,10 @@ export function cleanupOldMessages() {
     );
     return result.changes;
   } catch (error) {
-    logger.error({ error:error.message }, "Failed to cleanup old messages");
+    logger.error(
+      { error: (error as Error).message },
+      "Failed to cleanup old messages",
+    );
     throw error;
   }
 }

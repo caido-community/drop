@@ -7,6 +7,13 @@ export const initConfigService = (sdk: FrontendSDK) => {
 };
 
 export const ConfigService = {
+  getSDK: (): FrontendSDK => {
+    if (!sdkInstance) {
+      throw new Error("Config service not initialized with SDK");
+    }
+    return sdkInstance;
+  },
+
   getConfig: (): DropPluginConfig => {
     if (!sdkInstance) {
       throw new Error("Config service not initialized with SDK");

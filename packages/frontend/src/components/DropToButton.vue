@@ -1,4 +1,5 @@
 <template>
+  <div v-if="connections.length > 0">
   <Select
     v-model="selectedConnection"
     :options="connections"
@@ -15,6 +16,7 @@
       </div>
     </template>
   </Select>
+</div>
 </template>
 
 <script setup lang="ts">
@@ -24,11 +26,7 @@ import { onMounted, ref } from "vue";
 import { ConfigService } from "@/services/configService";
 import { type DropConnection, type DropPluginConfig } from "@/types";
 import { logger } from "@/utils/logger";
-
-const props = defineProps<{
-  title: string;
-  onConnectionSelect: (connection: DropConnection) => void;
-}>();
+import { callbacks } from "@/utils/dropTo";
 
 const isLoading = ref(false);
 const connections = ref<DropConnection[]>([]);
@@ -51,14 +49,20 @@ const loadConnections = (data: DropPluginConfig) => {
 
 const handleConnectionSelect = () => {
   if (selectedConnection.value) {
-    props.onConnectionSelect(selectedConnection.value);
+    const hash = window.location.hash;
+    for (const [key, callback] of Object.entries(callbacks)) {
+      if (hash.match(new RegExp(key))) {
+        callback(ConfigService.getSDK(), selectedConnection.value);
+        break;
+      }
+    }
     selectedConnection.value = undefined;
   }
 };
 
 onMounted(() => {
   ConfigService.onConfigChange((data) => {
-    logger.log("[DROP] Storage changed for " + props.title, data);
+    logger.log("[DROP] Storage changed for DropToButton", data);
     loadConnections(data);
   });
 
@@ -68,7 +72,7 @@ onMounted(() => {
     while (!(data = ConfigService.getConfig())) {
       await new Promise((resolve) => setTimeout(resolve, 100));
     }
-    logger.log("[DROP] Storage initialized for " + props.title, data);
+    logger.log("[DROP] Storage initialized for DropToButton", data);
     loadConnections(data);
   };
   waitForStorage();

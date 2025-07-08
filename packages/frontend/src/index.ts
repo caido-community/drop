@@ -12,6 +12,7 @@ import App from "./views/App.vue";
 
 import { ConfigService, initConfigService } from "@/services/configService";
 import { defaultStorage, type FrontendSDK } from "@/types";
+import DropToButton from "./components/DropToButton.vue";
 
 export const init = async (sdk: FrontendSDK) => {
   initConfigService(sdk);
@@ -50,6 +51,11 @@ export const init = async (sdk: FrontendSDK) => {
 
   sdk.sidebar.registerItem("Drop", "/drop", {
     icon: "fas fa-droplet",
+  });
+
+  sdk.replay.addToSlot("session-toolbar-secondary", {
+    type: "Custom",
+    component: DropToButton as any
   });
 
   const domInjectionManager = new DOMInjectionManager(sdk);

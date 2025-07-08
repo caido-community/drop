@@ -132,18 +132,10 @@ const processMessages = async (
           claim: () => {
             eventBus.emit("drop:claim", { payload: payload, alias: alias });
             toast.removeAllGroups();
-            sdk.window.showToast("Claimed message", {
-              variant: "success",
-              duration: 2000,
-            });
           },
           delete: () => {
             eventBus.emit("drop:delete", { payload: payload, alias: alias });
             toast.removeAllGroups();
-            sdk.window.showToast("Deleted message", {
-              variant: "info",
-              duration: 2000,
-            });
           },
         },
         life: 10000,
@@ -258,19 +250,35 @@ const handleClaimEvent = async (data: {
   switch (payload.objects[0]?.type) {
     case "Replay":
       await claimReplay(sdk, payload, friendAlias);
-      handleDeleteEvent(data);
+      handleDeleteEvent(data, true);
+      sdk.window.showToast("Claimed replay session", {
+        variant: "success",
+        duration: 2000,
+      });
       break;
     case "Scope":
       await claimScope(sdk, payload, friendAlias);
-      handleDeleteEvent(data);
+      handleDeleteEvent(data, true);
+      sdk.window.showToast("Claimed scope", {
+        variant: "success",
+        duration: 2000,
+      });
       break;
     case "Tamper":
       await claimTamper(sdk, payload, friendAlias);
-      handleDeleteEvent(data);
+      handleDeleteEvent(data, true);
+      sdk.window.showToast("Claimed M&R rule", {
+        variant: "success",
+        duration: 2000,
+      });
       break;
     case "Filter":
       await claimFilter(sdk, payload, friendAlias);
-      handleDeleteEvent(data);
+      handleDeleteEvent(data, true);
+      sdk.window.showToast("Claimed filter", {
+        variant: "success",
+        duration: 2000,
+      });
       break;
     default:
       logger.log("Unknown claim type", payload.objects[0]?.type);
@@ -278,7 +286,7 @@ const handleClaimEvent = async (data: {
   }
 };
 
-const handleDeleteEvent = async (data: { payload: DropPayload }) => {
+const handleDeleteEvent = async (data: { payload: DropPayload }, silent: boolean = false) => {
   const { payload } = data;
   logger.log("Processing delete message", payload);
 
@@ -289,6 +297,12 @@ const handleDeleteEvent = async (data: { payload: DropPayload }) => {
         (m) => m.id !== payload.id,
       );
       await ConfigService.updateConfig({ messages: updatedMessages });
+    }
+    if (!silent) {  
+      sdk.window.showToast("Deleted message", {
+        variant: "info",
+        duration: 2000,
+      });
     }
   } catch (err) {
     logger.error("Failed to delete message", err);
@@ -449,7 +463,7 @@ export const useDrop = () => {
     eventBus.on(
       "drop:delete",
       (data: { payload: DropPayload; alias: string }) => {
-        handleDeleteEvent(data);
+        handleDeleteEvent(data, false);
       },
     );
 

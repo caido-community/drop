@@ -1,19 +1,18 @@
 import { Classic } from "@caido/primevue";
 import PrimeVue from "primevue/config";
-import { v4 as uuidv4 } from "uuid";
 import { createApp } from "vue";
 
 import DropToButton from "@/components/DropToButton.vue";
 import {
   type DropConnection,
-  type DropPayload,
   type FrontendSDK,
 } from "@/types";
-import { eventBus } from "@/utils/eventBus";
 import { logger } from "@/utils/logger";
+import { callbacks } from "@/utils/dropTo";
 
 interface InjectionHandler {
   selector: string;
+  locationCondition?: string;
   handler: (element: Element, sdk: FrontendSDK) => void;
 }
 
@@ -31,20 +30,21 @@ export class DOMInjectionManager {
         handler: this.handleFilterActions.bind(this),
       },
       {
-        selector: "div[data-page='#/scope'] .c-preset-form-create__header",
+        selector: ".c-preset-form-create__header",
+        locationCondition: "#/scope",
         handler: this.handleScopeActions.bind(this),
       },
       {
         selector:
-          'div[data-page="#/tamper"] div.c-card__header:has(span.fa-undo)',
+          'div.c-card__header:has(span.fa-undo)',
+        locationCondition: "#/tamper",
         handler: this.handleTamperActions.bind(this),
-      },
+      }, 
       {
-        selector: ".c-replay-session-toolbar .c-card__body",
-        handler: this.handleReplayActions.bind(this),
-      },
-
-      // Add more injection handlers here
+        selector: ".c-card__header",
+        locationCondition: "(#/http-history|#/search)",
+        handler: this.handleHttpHistoryActions.bind(this),
+      }
     ];
   }
 
@@ -68,20 +68,20 @@ export class DOMInjectionManager {
   }
 
   private checkForInjectionPoints() {
-    for (const { selector, handler } of this.injectionHandlers) {
-      const elements = document.querySelectorAll(selector);
-      elements.forEach((element) => {
-        if (!element.querySelector(".drop-injection")) {
-          handler(element, this.sdk);
-        }
-      });
+    for (const { selector, handler, locationCondition } of this.injectionHandlers) {
+      if (locationCondition && !window.location.hash.match(new RegExp(locationCondition))) {
+        continue;
+      }
+
+      const elements = document.querySelector(selector);
+      if (elements && !elements.querySelector(".drop-injection")) {
+        handler(elements, this.sdk);
+      }
     }
   }
 
   private generateButton(
     container: Element,
-    callback: (connection: DropConnection) => void,
-    sdk: FrontendSDK,
     customClasses?: string,
   ) {
     // Create the button container
@@ -96,10 +96,7 @@ export class DOMInjectionManager {
     );
 
     // Create a Vue app instance
-    const app = createApp(DropToButton, {
-      title: "Drop to",
-      onConnectionSelect: callback,
-    });
+    const app = createApp(DropToButton, {});
     // Mount the Vue component
     app.use(PrimeVue, {
       unstyled: true,
@@ -108,164 +105,23 @@ export class DOMInjectionManager {
     app.mount(buttonContainer);
   }
 
-  private handleTamperActions(container: Element, sdk: FrontendSDK) {
-    const callback = (connection: DropConnection) => {
-      const preset = document.querySelector(
-        '.c-tree-rule[data-is-active="true"]',
-      );
-      const id = preset?.getAttribute("data-rule-id");
-      if (!id) {
-        this.sdk.window.showToast("Please select a rule first.", {
-          variant: "error",
-          duration: 5000,
-        });
-        return;
-      }
-      const rules = this.sdk.matchReplace.getRules();
-      const rule = rules.find((rule) => rule.id === id);
-      if (JSON.stringify(rule).indexOf('"kind":"ReplacerWorkflow"') > -1) {
-        this.sdk.window.showToast(
-          "Sorry, we don't support workflow M&R rules yet.",
-          { variant: "error", duration: 5000 },
-        );
-        return;
-      }
-      const payload: DropPayload = {
-        id: uuidv4(),
-        objects: [{ type: "Tamper", value: rule }],
-        notes: "M&R Rule drop",
-      };
-
-      eventBus.emit("drop:send", {
-        payload: payload,
-        type: "Tamper",
-        connection: connection,
-      });
-    };
-    this.generateButton(container, callback, sdk, "pr-4");
+  private handleTamperActions(container: Element) {
+    this.generateButton(container, "pr-4");
   }
 
-  private handleReplayActions(container: Element, sdk: FrontendSDK) {
-    const callback = async (connection: DropConnection) => {
-      const button = document.querySelector(
-        '.c-tab-list__body .c-tab-list__tab > div[data-is-selected="true"]',
-      );
-      if (!button) {
-        this.sdk.window.showToast("Please select a replay tab first.", {
-          variant: "error",
-          duration: 5000,
-        });
-        return;
-      }
-      const id = button?.getAttribute("data-session-id");
-      if (!id) {
-        this.sdk.window.showToast("Please select a replay session first.", {
-          variant: "error",
-          duration: 5000,
-        });
-        return;
-      }
-      const session = await this.sdk.graphql.replayEntriesBySession({
-        sessionId: id,
-      });
-
-      const activeEntry = session?.replaySession?.activeEntry?.id;
-      if (!activeEntry) {
-        this.sdk.window.showToast("Please select a replay entry first.", {
-          variant: "error",
-          duration: 5000,
-        });
-        return;
-      }
-
-      const entryData = await this.sdk.graphql.replayEntry({ id: activeEntry });
-      if (!entryData || !entryData.replayEntry) {
-        this.sdk.window.showToast("Please select a replay entry first.", {
-          variant: "error",
-          duration: 5000,
-        });
-        return;
-      }
-      const data = {
-        session: session.replaySession,
-        entry: entryData.replayEntry,
-      };
-
-      logger.log("Entry", entryData);
-      const payload: DropPayload = {
-        id: uuidv4(),
-        objects: [{ type: "Replay", value: data }],
-        notes: "Replay Session drop",
-      };
-
-      // Create and dispatch the custom event
-      eventBus.emit("drop:send", {
-        payload: payload,
-        type: "Replay",
-        connection: connection,
-      });
-    };
-    container.classList.add("justify-between");
-    this.generateButton(container, callback, sdk, "pr-2");
+  private handleHttpHistoryActions(container: Element) {
+    this.generateButton(container, "pr-4");
   }
 
-  private handleFilterActions(container: Element, sdk: FrontendSDK) {
-    const callback = (connection: DropConnection) => {
-      const preset = document.querySelector(
-        '.c-preset[data-is-selected="true"]',
-      );
-      const id = preset?.getAttribute("data-preset-id");
-      if (!id) {
-        this.sdk.window.showToast("Please select a filter first.", {
-          variant: "error",
-          duration: 5000,
-        });
-        return;
-      }
-      const filters = this.sdk.filters.getAll();
-      const filter = filters.find((filter) => filter.id === id);
-      const payload: DropPayload = {
-        id: uuidv4(),
-        objects: [{ type: "Filter", value: filter }],
-        notes: "Filter drop",
-      };
-
-      eventBus.emit("drop:send", {
-        payload: payload,
-        type: "Filter",
-        connection: connection,
-      });
-    };
-    this.generateButton(container, callback, sdk);
+  private handleReplayActions(container: Element) {
+    //Removed - Switched to Slots
   }
 
-  private handleScopeActions(container: Element, sdk: FrontendSDK) {
-    const callback = (connection: DropConnection) => {
-      const preset = document.querySelector(
-        '.c-preset[data-is-selected="true"]',
-      );
-      const id = preset?.getAttribute("data-preset-id");
-      if (!id) {
-        this.sdk.window.showToast("Please select a scope first.", {
-          variant: "error",
-          duration: 5000,
-        });
-        return;
-      }
-      const scopes = this.sdk.scopes.getScopes();
-      const scope = scopes.find((scope) => scope.id === id);
-      const payload: DropPayload = {
-        id: uuidv4(),
-        objects: [{ type: "Scope", value: scope }],
-        notes: "Scope drop",
-      };
+  private handleFilterActions(container: Element) {
+    this.generateButton(container, "pr-4");
+  }
 
-      eventBus.emit("drop:send", {
-        payload: payload,
-        type: "Scope",
-        connection: connection,
-      });
-    };
-    this.generateButton(container, callback, sdk);
+  private handleScopeActions(container: Element) {
+    this.generateButton(container, "pr-4");
   }
 }

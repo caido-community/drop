@@ -1,6 +1,7 @@
 import { ConfigService } from "@/services/configService";
 import { type DropMessage, type DropSendMessage } from "@/types";
 import { logger } from "@/utils/logger";
+import { ResponseMetaFragmentDoc } from "@caido/sdk-frontend/src/types/__generated__/graphql-sdk";
 
 type Success<T> = {
   data: T;
@@ -46,26 +47,21 @@ export const DropAPI = {
 
   sendMessage: async (
     message: DropSendMessage,
-  ): Promise<Result<void, Error>> => {
-    try {
-      const apiServer = ConfigService.getApiServer();
-      const response = await fetch(`${apiServer}/api/v1/send`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(message),
-      });
+  ): Promise<void> => {
+    const apiServer = ConfigService.getApiServer();
+    const response = await fetch(`${apiServer}/api/v1/send`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(message),
+    });
 
-      if (!response.ok) {
-        throw new Error(`Failed to send message: ${response.statusText}`);
-      }
-
-      return { data: undefined, error: undefined };
-    } catch (error) {
-      logger.error("Failed to send message:", error);
-      return { data: undefined, error: error as Error };
+    if (!response.ok) {
+      throw new Error(`Failed to send message: ${response.statusText}`);
     }
+
+    logger.log("Message sent successfully", response, response.status);
   },
 
   uploadKey: async (

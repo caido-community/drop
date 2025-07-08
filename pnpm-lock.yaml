@@ -71,11 +71,11 @@ importers:
         version: 3.5.13(typescript@5.5.4)
     devDependencies:
       '@caido/sdk-backend':
-        specifier: ^0.47.1
-        version: 0.47.1
+        specifier: latest
+        version: 0.49.0
       '@caido/sdk-frontend':
-        specifier: ^0.47.1
-        version: 0.47.1(@codemirror/view@6.28.1)
+        specifier: latest
+        version: 0.49.0(@codemirror/state@6.5.2)(@codemirror/view@6.28.1)(vue@3.5.13(typescript@5.5.4))
       '@codemirror/view':
         specifier: 6.28.1
         version: 6.28.1
@@ -352,16 +352,18 @@ packages:
   '@caido/primevue@0.1.2':
     resolution: {integrity: sha512-PCv6qyvlWEKB97PLRzPHDjs7ZGW5JQrD6jvJiMEiprfu4IR5/dXiqRJ4M5g293qn+RAffBuiXcna0vWSxrg5lQ==}
 
-  '@caido/quickjs-types@0.17.2':
-    resolution: {integrity: sha512-5kcucGORMNEbcdU91yKLYZG/TFDqsO6XmCZ1TnU6V48E61mmqrJg6kjrfOFP1WOugDm+ZcGd/Su3p3XkFXfaPg==}
+  '@caido/quickjs-types@0.19.1':
+    resolution: {integrity: sha512-8r/JS5jZVfMgW4qDTORzk3rIbcO/z3nbG5hWb2fA1GVcbf6EB3uCU2Gqk8vF9jqLRli1FR2SO4JXio2JcFP3+g==}
 
-  '@caido/sdk-backend@0.47.1':
-    resolution: {integrity: sha512-1+HV46o2XqBRbjDH8BbO6VMAsV3chHaylv6YI/+vVJNMSEEU1E60pfcTNYfB76XChlWo0JWhzZY+I2dAYYAI1Q==}
+  '@caido/sdk-backend@0.49.0':
+    resolution: {integrity: sha512-cKfcfn2fcy2Y5LzQj+UexZQJEt3YKbrYlNmfl6Ae2icBvuX09JTaAQMzKKvlt9BkGNzhY5UP6KUqfpyznt4k2Q==}
 
-  '@caido/sdk-frontend@0.47.1':
-    resolution: {integrity: sha512-Lv8GRXg9Sk0V8yTqPfW+MfYkPwx+ajo9hvNGu5Xkljz33TnPe8OELy6yJiztm8iqJPKPqKt9/60fkhtUtWIWgQ==}
+  '@caido/sdk-frontend@0.49.0':
+    resolution: {integrity: sha512-dvt4FzFWj4MMCtFH0XiuoEgEWmUwDsmFQo3iCZiCeZzybKpYDs2/fh1wz7/Ue/rCsHMIwqI5NtvKy5a9V0sGNg==}
     peerDependencies:
+      '@codemirror/state': ^6.0.0
       '@codemirror/view': ^6.0.0
+      vue: ^3.0.0
 
   '@caido/sdk-shared@0.1.1':
     resolution: {integrity: sha512-JAV5ajUqxZdXYPTmDEvIKBZon8I5uHq44ATj0Nj3BVpllRDUGY9kcBd+PXMD50+3lv1CvhR3/f6q24T0+4aVJQ==}
@@ -4024,16 +4026,18 @@ snapshots:
 
   '@caido/primevue@0.1.2': {}
 
-  '@caido/quickjs-types@0.17.2': {}
+  '@caido/quickjs-types@0.19.1': {}
 
-  '@caido/sdk-backend@0.47.1':
+  '@caido/sdk-backend@0.49.0':
     dependencies:
-      '@caido/quickjs-types': 0.17.2
+      '@caido/quickjs-types': 0.19.1
       '@caido/sdk-shared': 0.1.1
 
-  '@caido/sdk-frontend@0.47.1(@codemirror/view@6.28.1)':
+  '@caido/sdk-frontend@0.49.0(@codemirror/state@6.5.2)(@codemirror/view@6.28.1)(vue@3.5.13(typescript@5.5.4))':
     dependencies:
+      '@codemirror/state': 6.5.2
       '@codemirror/view': 6.28.1
+      vue: 3.5.13(typescript@5.5.4)
 
   '@caido/sdk-shared@0.1.1': {}
 

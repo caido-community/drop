@@ -22,7 +22,10 @@ export default async (req: Request, res: Response) => {
     try {
       body = SendRequestSchema.parse(req.body);
     } catch (error) {
-      logger.warn({ error:error.message }, "Missing required fields in send request");
+      logger.warn(
+        { error: (error as Error).message },
+        "Missing required fields in send request",
+      );
       return res
         .status(400)
         .json({ error: "Missing required fields" } as ErrorResponse);
@@ -91,7 +94,10 @@ export default async (req: Request, res: Response) => {
         (error.message === "Signature verification failed" ||
           error.message === "Timestamp validation failed")
       ) {
-        logger.warn({ error: error.message }, "Invalid signature or timestamp");
+        logger.warn(
+          { error: (error as Error).message },
+          "Invalid signature or timestamp",
+        );
         return res
           .status(401)
           .json({ error: "Invalid signature or timestamp" } as ErrorResponse);
@@ -99,7 +105,10 @@ export default async (req: Request, res: Response) => {
       throw error;
     }
   } catch (error) {
-    logger.error({ error:error.message }, "Error handling send request");
+    logger.error(
+      { error: (error as Error).message },
+      "Error handling send request",
+    );
     return res
       .status(500)
       .json({ error: "Internal server error" } as ErrorResponse);
