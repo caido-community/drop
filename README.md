@@ -58,7 +58,7 @@ Drop's encryption is done via PGP. We get the target user's PGP fingerprint when
 
 To work, `Drop` requires a centralized server. The data that flows through the server is completely end-to-end encrypted using the target user's PGP public key, which is shared via the share code. 
 
-The code for the server is public, so you can host your own instance or use any of the public servers below.
+The code for the server is public, so you can host your own instance or use any of the public servers below. **We have a super easy to use docker image for hosting your own server**. Please see [here](packages/server/README.md) for more info. 
 
 The API Server code can be found [here](packages/server). Our database schema is as follows:
 ```
@@ -71,8 +71,6 @@ The API Server code can be found [here](packages/server). Our database schema is
   );
 ```
 No unencrypted userdata is ever placed into the DB.
-
-For more information on the server, see [here](packages/server/README.md). 
 
 ### Public servers
 
