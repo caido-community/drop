@@ -53,9 +53,10 @@ export const init = async (sdk: FrontendSDK) => {
     icon: "fas fa-droplet",
   });
 
+  // @ts-ignore
   sdk.replay.addToSlot("session-toolbar-secondary", {
     type: "Custom",
-    component: DropToButton,
+    component: DropToButton as any,
   });
 
   const domInjectionManager = new DOMInjectionManager(sdk);
