@@ -72,11 +72,19 @@ The API Server code can be found [here](packages/server). Our database schema is
 ```
 No unencrypted userdata is ever placed into the DB.
 
+For more information on the server, see [here](packages/server/README.md). 
+
 ### Public servers
 
 | Domain        | Owner             |
 | ------------- | ----------------- |
 | `drop.cai.do` | `Caido Labs Inc.` |
+
+### How to change your server in Drop
+
+From the Settings page in the Drop plugin, select `Show Advanced Options` and modify the `API Server URL` setting:
+![image](https://github.com/user-attachments/assets/4b3570f5-836d-4861-82af-715a89002249)
+
 
 
 ## Disclosures
