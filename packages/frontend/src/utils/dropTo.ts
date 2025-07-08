@@ -131,7 +131,7 @@ const callbacks = {
         return;
       }
       const rules = sdk.matchReplace.getRules();
-      const rule = rules.find((rule: any) => rule.id === id);
+      const rule = rules.find((rule) => rule.id === id);
       if (JSON.stringify(rule).indexOf('"kind":"ReplacerWorkflow"') > -1) {
         sdk.window.showToast(
           "Sorry, we don't support workflow M&R rules yet.",
@@ -165,7 +165,7 @@ const callbacks = {
         return;
       }
       const filters = sdk.filters.getAll();
-      const filter = filters.find((filter: any) => filter.id === id);
+      const filter = filters.find((filter) => filter.id === id);
       const payload: DropPayload = {
         id: uuidv4(),
         objects: [{ type: "Filter", value: filter }],
@@ -192,7 +192,7 @@ const callbacks = {
         return;
       }
       const scopes = sdk.scopes.getScopes();
-      const scope = scopes.find((scope: any) => scope.id === id);
+      const scope = scopes.find((scope) => scope.id === id);
       const payload: DropPayload = {
         id: uuidv4(),
         objects: [{ type: "Scope", value: scope }],

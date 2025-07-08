@@ -55,7 +55,7 @@ export const init = async (sdk: FrontendSDK) => {
 
   sdk.replay.addToSlot("session-toolbar-secondary", {
     type: "Custom",
-    component: DropToButton as any
+    component: DropToButton,
   });
 
   const domInjectionManager = new DOMInjectionManager(sdk);
