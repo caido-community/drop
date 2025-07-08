@@ -53,8 +53,11 @@ export const init = async (sdk: FrontendSDK) => {
     icon: "fas fa-droplet",
   });
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  sdk.replay.addToSlot("session-toolbar-secondary", {type: "Custom", component: DropToButton as any});
+  sdk.replay.addToSlot("session-toolbar-secondary", {
+    type: "Custom",
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    component: DropToButton as any,
+  });
 
   const domInjectionManager = new DOMInjectionManager(sdk);
   domInjectionManager.start();
