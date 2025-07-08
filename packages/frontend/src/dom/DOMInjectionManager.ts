@@ -3,12 +3,8 @@ import PrimeVue from "primevue/config";
 import { createApp } from "vue";
 
 import DropToButton from "@/components/DropToButton.vue";
-import {
-  type DropConnection,
-  type FrontendSDK,
-} from "@/types";
+import { type FrontendSDK } from "@/types";
 import { logger } from "@/utils/logger";
-import { callbacks } from "@/utils/dropTo";
 
 interface InjectionHandler {
   selector: string;
@@ -111,10 +107,6 @@ export class DOMInjectionManager {
 
   private handleHttpHistoryActions(container: Element) {
     this.generateButton(container, "pr-4");
-  }
-
-  private handleReplayActions(container: Element) {
-    //Removed - Switched to Slots
   }
 
   private handleFilterActions(container: Element) {

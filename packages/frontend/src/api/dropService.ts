@@ -1,7 +1,6 @@
 import { ConfigService } from "@/services/configService";
 import { type DropMessage, type DropSendMessage } from "@/types";
 import { logger } from "@/utils/logger";
-import { ResponseMetaFragmentDoc } from "@caido/sdk-frontend/src/types/__generated__/graphql-sdk";
 
 type Success<T> = {
   data: T;
