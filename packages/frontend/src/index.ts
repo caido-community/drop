@@ -56,7 +56,9 @@ export const init = async (sdk: FrontendSDK) => {
   sdk.replay.addToSlot("session-toolbar-secondary", {
     type: "Custom",
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    component: DropToButton as any,
+    definition:{
+      component: DropToButton as any,
+    }
   });
 
   const domInjectionManager = new DOMInjectionManager(sdk);
