@@ -30,6 +30,18 @@ export const claimReplay = async (
     if (!sessionId) {
       throw new Error("Session ID is null");
     }
+    // Check for Drops collection and create if doesn't exist
+    const collections = await sdk.replay.getCollections();
+    let dropsCollectionId = collections.find(c => c.name === "Drops")?.id;
+    
+    if (!dropsCollectionId) {
+      const newCollection = await sdk.replay.createCollection("Drops");
+      dropsCollectionId = newCollection.id;
+    }
+
+    // Move session into Drops collection
+    await sdk.replay.moveSession(sessionId, dropsCollectionId);
+
     sdk.replay.openTab(sessionId);
     const isNameNumeric = /^\d+$/.test(session.name);
     await sdk.graphql.renameReplaySession({
