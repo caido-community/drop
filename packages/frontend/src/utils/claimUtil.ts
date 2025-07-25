@@ -89,12 +89,12 @@ export const claimTamper = async (
     logger.error("Invalid payload structure for claimTamper", payload);
     throw new Error("Invalid payload structure");
   }
-  const { name, section, query, collectionId } = payload.objects[0].value;
+  const { name, section, query } = payload.objects[0].value;
   const res = await sdk.matchReplace.createRule({
     name: name,
     section: section,
     query: query,
-    collectionId: collectionId,
+    collectionId: "1",
   });
   return res;
 };
