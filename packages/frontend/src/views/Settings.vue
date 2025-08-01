@@ -10,7 +10,11 @@ import { DropAPI } from "@/api/dropService";
 import { useDrop } from "@/plugins/drop";
 import { useSDK } from "@/plugins/sdk";
 import { ConfigService } from "@/services/configService";
-import { defaultStorage, type DropPluginConfig, type PGPKeyPair } from "@/types";
+import {
+  defaultStorage,
+  type DropPluginConfig,
+  type PGPKeyPair,
+} from "@/types";
 import { fetchUserName } from "@/utils/caido";
 import { logger } from "@/utils/logger";
 const sdk = useSDK();
@@ -44,7 +48,7 @@ const onGenerateKey = async (nocopy: boolean = false) => {
   // If user already has a key pair, ask for confirmation before regenerating
   if (localConfig.value?.pgpKeyPair && !nocopy) {
     const confirmed = confirm(
-      "Are you sure you want to regenerate your PGP key pair? This will replace your current keys and you'll need to share your new share code with friends again."
+      "Are you sure you want to regenerate your PGP key pair? This will replace your current keys and you'll need to share your new share code with friends again.",
     );
     if (!confirmed) {
       return;
@@ -94,7 +98,7 @@ const onAddConnection = async (
   }
 
   const [fingerprint, alias] = newConnectionShareCode.value.split(":");
-  if (!fingerprint ) {
+  if (!fingerprint) {
     sdk.window.showToast("Invalid share code.", {
       variant: "error",
       duration: 2000,
@@ -294,7 +298,7 @@ const onImportKey = async (event: any) => {
     // Update the config with the imported key pair
     const config = ConfigService.getConfig();
     config.pgpKeyPair = importedKeyPair;
-    
+
     // Update alias if provided in the key file
     if (keyData.alias && keyData.alias !== config.alias) {
       config.alias = keyData.alias;
@@ -312,7 +316,8 @@ const onImportKey = async (event: any) => {
     fileUploadRef.value?.clear();
   } catch (error) {
     logger.error("Failed to import PGP key:", error);
-    importError.value = error instanceof Error ? error.message : "Failed to import PGP key";
+    importError.value =
+      error instanceof Error ? error.message : "Failed to import PGP key";
     sdk.window.showToast("Failed to import PGP key", {
       variant: "error",
       duration: 3000,
@@ -427,10 +432,15 @@ onMounted(async () => {
               <!-- PGP Key Management Section -->
               <div class="flex flex-col gap-4">
                 <h4 class="font-bold text-lg">PGP Key Management</h4>
-                
+
                 <!-- Export Key -->
                 <div class="flex flex-col gap-2">
-                  <label class="text-sm font-medium">Export PGP Keys - <span class="text-sm text-gray-400">Download your PGP key pair as a backup file</span> </label>
+                  <label class="text-sm font-medium"
+                    >Export PGP Keys -
+                    <span class="text-sm text-gray-400"
+                      >Download your PGP key pair as a backup file</span
+                    >
+                  </label>
                   <div class="flex items-center gap-2">
                     <Button
                       icon="fas fa-download"
@@ -443,7 +453,12 @@ onMounted(async () => {
 
                 <!-- Import Key -->
                 <div class="flex flex-col gap-2">
-                  <label class="text-sm font-medium">Import PGP Keys - <span class="text-sm text-gray-400">Import a previously exported PGP key pair file</span> </label>
+                  <label class="text-sm font-medium"
+                    >Import PGP Keys -
+                    <span class="text-sm text-gray-400"
+                      >Import a previously exported PGP key pair file</span
+                    >
+                  </label>
                   <FileUpload
                     ref="fileUploadRef"
                     mode="basic"
@@ -455,7 +470,7 @@ onMounted(async () => {
                     @select="onImportKey"
                     class="import-file-upload"
                     :pt="{
-                      root: { class: '!justify-start' }
+                      root: { class: '!justify-start' },
                     }"
                   />
                   <p v-if="importError" class="text-red-500 text-sm mt-1">
@@ -465,7 +480,9 @@ onMounted(async () => {
               </div>
 
               <!-- Custom Server Configuration Section -->
-              <div class="flex flex-col gap-4 mt-6 pt-4 border-t border-zinc-700">
+              <div
+                class="flex flex-col gap-4 mt-6 pt-4 border-t border-zinc-700"
+              >
                 <h4 class="font-bold text-lg">Custom Server Configuration</h4>
                 <p class="text-sm text-gray-100">
                   The settings below should only be used if you're hosting your
@@ -480,23 +497,49 @@ onMounted(async () => {
                 </p>
                 <div class="flex flex-col gap-2">
                   <label for="apiServer">API Server URL</label>
-                  <InputText
-                    id="apiServer"
-                    v-model="apiServer"
-                    placeholder="Enter API Server URL"
-                    @change="handleServerConfigChange"
-                    @keyup.enter="handleServerConfigChange"
-                  />
+                  <div class="flex items-center gap-2">
+                    <InputText
+                      id="apiServer"
+                      v-model="apiServer"
+                      class="w-full"
+                      placeholder="Enter API Server URL"
+                      @change="handleServerConfigChange"
+                      @keyup.enter="handleServerConfigChange"
+                    />
+                    <Button
+                      icon="fas fa-undo"
+                      class="p-button-text"
+                      @click="
+                        () => {
+                          apiServer = 'https://drop.cai.do';
+                          handleServerConfigChange();
+                        }
+                      "
+                    />
+                  </div>
                 </div>
                 <div class="flex flex-col gap-2">
                   <label for="keyserver">Key Server URL</label>
-                  <InputText
-                    id="keyserver"
-                    v-model="keyserver"
-                    placeholder="Enter Key Server URL"
-                    @change="handleServerConfigChange"
-                    @keyup.enter="handleServerConfigChange"
-                  />
+                  <div class="flex items-center gap-2">
+                    <InputText
+                      id="keyserver"
+                      v-model="keyserver"
+                      class="w-full"
+                      placeholder="Enter Key Server URL"
+                      @change="handleServerConfigChange"
+                      @keyup.enter="handleServerConfigChange"
+                    />
+                    <Button
+                      icon="fas fa-undo"
+                      class="p-button-text"
+                      @click="
+                        () => {
+                          keyserver = 'https://keys.openpgp.org/';
+                          handleServerConfigChange();
+                        }
+                      "
+                    />
+                  </div>
                 </div>
               </div>
             </div>
