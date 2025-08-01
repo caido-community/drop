@@ -511,7 +511,7 @@ onMounted(async () => {
                       class="p-button-text"
                       @click="
                         () => {
-                          apiServer = 'https://drop.cai.do';
+                          apiServer = defaultStorage.apiServer;
                           handleServerConfigChange();
                         }
                       "
@@ -534,7 +534,7 @@ onMounted(async () => {
                       class="p-button-text"
                       @click="
                         () => {
-                          keyserver = 'https://keys.openpgp.org/';
+                          keyserver = defaultStorage.keyServer;
                           handleServerConfigChange();
                         }
                       "
