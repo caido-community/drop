@@ -8,10 +8,7 @@ export default async (req: Request, res: Response) => {
     await db.prepare("SELECT 1").get();
     res.status(200).json({ status: "healthy" });
   } catch (error) {
-    logger.error(
-      { error: (error as Error).message },
-      "Health check failed",
-    );
+    logger.error({ error: (error as Error).message }, "Health check failed");
     res
       .status(500)
       .json({ status: "unhealthy", error: "Database connection failed" });

@@ -57,6 +57,7 @@ export const init = async (sdk: FrontendSDK) => {
     type: "Custom",
 
     definition: {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       component: DropToButton as any,
     },
   });

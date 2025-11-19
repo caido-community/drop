@@ -94,10 +94,7 @@ export default async (req: Request, res: Response) => {
         (error.message === "Signature verification failed" ||
           error.message === "Timestamp validation failed")
       ) {
-        logger.warn(
-          { error: (error as Error).message },
-          "Invalid signature or timestamp",
-        );
+        logger.warn({ error: error.message }, "Invalid signature or timestamp");
         return res
           .status(401)
           .json({ error: "Invalid signature or timestamp" } as ErrorResponse);

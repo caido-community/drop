@@ -258,6 +258,7 @@ const onExportKey = () => {
   });
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const onImportKey = async (event: any) => {
   isImportingKey.value = true;
   importError.value = "";
@@ -278,6 +279,7 @@ const onImportKey = async (event: any) => {
 
     // Validate the PGP keys
     const publicKey = await readKey({ armoredKey: keyData.publicKey });
+    // @ts-expect-error - reading private key to validate it
     const privateKey = await readPrivateKey({ armoredKey: keyData.privateKey });
 
     // Verify fingerprint matches
