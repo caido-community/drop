@@ -3,6 +3,7 @@ import PrimeVue from "primevue/config";
 import ToastService from "primevue/toastservice";
 import { createApp } from "vue";
 
+import DropToButton from "./components/DropToButton.vue";
 import { DOMInjectionManager } from "./dom/DOMInjectionManager";
 import { SDKPlugin } from "./plugins/sdk";
 import "./styles/customInjectionGlobal.css";
@@ -12,7 +13,6 @@ import App from "./views/App.vue";
 
 import { ConfigService, initConfigService } from "@/services/configService";
 import { defaultStorage, type FrontendSDK } from "@/types";
-import DropToButton from "./components/DropToButton.vue";
 
 export const init = async (sdk: FrontendSDK) => {
   initConfigService(sdk);
@@ -55,10 +55,10 @@ export const init = async (sdk: FrontendSDK) => {
 
   sdk.replay.addToSlot("session-toolbar-secondary", {
     type: "Custom",
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    definition:{
+
+    definition: {
       component: DropToButton as any,
-    }
+    },
   });
 
   const domInjectionManager = new DOMInjectionManager(sdk);

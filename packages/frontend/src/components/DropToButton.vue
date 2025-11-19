@@ -1,22 +1,22 @@
 <template>
   <div v-if="connections.length > 0">
-  <Select
-    v-model="selectedConnection"
-    :options="connections"
-    :loading="isLoading"
-    option-label="alias"
-    placeholder="Drop to..."
-    class="w-full"
-    :filter="true"
-    @change="handleConnectionSelect"
-  >
-    <template #option="slotProps">
-      <div class="flex items-center gap-2">
-        <span>{{ slotProps.option.alias || "Unnamed Connection" }}</span>
-      </div>
-    </template>
-  </Select>
-</div>
+    <Select
+      v-model="selectedConnection"
+      :options="connections"
+      :loading="isLoading"
+      option-label="alias"
+      placeholder="Drop to..."
+      class="w-full"
+      :filter="true"
+      @change="handleConnectionSelect"
+    >
+      <template #option="slotProps">
+        <div class="flex items-center gap-2">
+          <span>{{ slotProps.option.alias || "Unnamed Connection" }}</span>
+        </div>
+      </template>
+    </Select>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -25,8 +25,8 @@ import { onMounted, ref } from "vue";
 
 import { ConfigService } from "@/services/configService";
 import { type DropConnection, type DropPluginConfig } from "@/types";
-import { logger } from "@/utils/logger";
 import { callbacks } from "@/utils/dropTo";
+import { logger } from "@/utils/logger";
 
 const isLoading = ref(false);
 const connections = ref<DropConnection[]>([]);

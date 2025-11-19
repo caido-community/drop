@@ -277,7 +277,10 @@ const handleClaimEvent = async (data: {
   }
 };
 
-const handleDeleteEvent = async (data: { payload: DropPayload }, silent: boolean = false) => {
+const handleDeleteEvent = async (
+  data: { payload: DropPayload },
+  silent: boolean = false,
+) => {
   const { payload } = data;
   logger.log("Processing delete message", payload);
 
@@ -289,7 +292,7 @@ const handleDeleteEvent = async (data: { payload: DropPayload }, silent: boolean
       );
       await ConfigService.updateConfig({ messages: updatedMessages });
     }
-    if (!silent) {  
+    if (!silent) {
       sdk.window.showToast("Deleted message", {
         variant: "info",
         duration: 2000,

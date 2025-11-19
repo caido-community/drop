@@ -44,9 +44,7 @@ export const DropAPI = {
     }
   },
 
-  sendMessage: async (
-    message: DropSendMessage,
-  ): Promise<void> => {
+  sendMessage: async (message: DropSendMessage): Promise<void> => {
     const apiServer = ConfigService.getApiServer();
     const response = await fetch(`${apiServer}/api/v1/send`, {
       method: "POST",

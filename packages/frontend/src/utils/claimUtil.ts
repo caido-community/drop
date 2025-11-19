@@ -31,9 +31,9 @@ export const claimReplay = async (
       throw new Error("Session ID is null");
     }
     // Check for Drops collection and create if doesn't exist
-    const collections = await sdk.replay.getCollections();
-    let dropsCollectionId = collections.find(c => c.name === "Drops")?.id;
-    
+    const collections = sdk.replay.getCollections();
+    let dropsCollectionId = collections.find((c) => c.name === "Drops")?.id;
+
     if (!dropsCollectionId) {
       const newCollection = await sdk.replay.createCollection("Drops");
       dropsCollectionId = newCollection.id;

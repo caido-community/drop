@@ -31,16 +31,15 @@ export class DOMInjectionManager {
         handler: this.handleScopeActions.bind(this),
       },
       {
-        selector:
-          'div.c-card__header:has(span.fa-undo)',
+        selector: "div.c-card__header:has(span.fa-undo)",
         locationCondition: "#/tamper",
         handler: this.handleTamperActions.bind(this),
-      }, 
+      },
       {
         selector: ".c-card__header",
         locationCondition: "(#/http-history|#/search)",
         handler: this.handleHttpHistoryActions.bind(this),
-      }
+      },
     ];
   }
 
@@ -64,8 +63,12 @@ export class DOMInjectionManager {
   }
 
   private checkForInjectionPoints() {
-    for (const { selector, handler, locationCondition } of this.injectionHandlers) {
-      if (locationCondition && !window.location.hash.match(new RegExp(locationCondition))) {
+    for (const { selector, handler, locationCondition } of this
+      .injectionHandlers) {
+      if (
+        locationCondition &&
+        !window.location.hash.match(new RegExp(locationCondition))
+      ) {
         continue;
       }
 
@@ -76,10 +79,7 @@ export class DOMInjectionManager {
     }
   }
 
-  private generateButton(
-    container: Element,
-    customClasses?: string,
-  ) {
+  private generateButton(container: Element, customClasses?: string) {
     // Create the button container
     const buttonContainer = document.createElement("div");
     buttonContainer.className =
