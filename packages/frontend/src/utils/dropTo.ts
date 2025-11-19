@@ -161,7 +161,8 @@ const callbacks = {
   },
 
   "#/filter": (sdk: FrontendSDK, connection: DropConnection) => {
-    const preset = document.querySelector('.c-preset[data-is-selected="true"]');
+    const parent = document.querySelector(".c-list-items__well");
+    const preset = parent?.querySelector('[data-is-selected="true"]');
     const id = preset?.getAttribute("data-preset-id");
     if (!id) {
       sdk.window.showToast("Please select a filter first.", {
