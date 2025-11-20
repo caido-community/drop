@@ -499,23 +499,49 @@ onMounted(async () => {
                 </p>
                 <div class="flex flex-col gap-2">
                   <label for="apiServer">API Server URL</label>
-                  <InputText
-                    id="apiServer"
-                    v-model="apiServer"
-                    placeholder="Enter API Server URL"
-                    @change="handleServerConfigChange"
-                    @keyup.enter="handleServerConfigChange"
-                  />
+                  <div class="flex items-center gap-2">
+                    <InputText
+                      id="apiServer"
+                      v-model="apiServer"
+                      class="w-full"
+                      placeholder="Enter API Server URL"
+                      @change="handleServerConfigChange"
+                      @keyup.enter="handleServerConfigChange"
+                    />
+                    <Button
+                      icon="fas fa-undo"
+                      class="p-button-text"
+                      @click="
+                        () => {
+                          apiServer = defaultStorage.apiServer;
+                          handleServerConfigChange();
+                        }
+                      "
+                    />
+                  </div>
                 </div>
                 <div class="flex flex-col gap-2">
                   <label for="keyserver">Key Server URL</label>
-                  <InputText
-                    id="keyserver"
-                    v-model="keyserver"
-                    placeholder="Enter Key Server URL"
-                    @change="handleServerConfigChange"
-                    @keyup.enter="handleServerConfigChange"
-                  />
+                  <div class="flex items-center gap-2">
+                    <InputText
+                      id="keyserver"
+                      v-model="keyserver"
+                      class="w-full"
+                      placeholder="Enter Key Server URL"
+                      @change="handleServerConfigChange"
+                      @keyup.enter="handleServerConfigChange"
+                    />
+                    <Button
+                      icon="fas fa-undo"
+                      class="p-button-text"
+                      @click="
+                        () => {
+                          keyserver = defaultStorage.keyServer;
+                          handleServerConfigChange();
+                        }
+                      "
+                    />
+                  </div>
                 </div>
               </div>
             </div>
