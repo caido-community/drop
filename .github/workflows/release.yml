@@ -1,79 +1,33 @@
 name: 🚀 Release
 
 on:
-  release:
-    types: [released]
+  workflow_dispatch:
+
 env:
   NODE_VERSION: 22
   PNPM_VERSION: 10
 
 jobs:
-  verify:
-    name: Verify tag
+  plugin:
+    name: Release plugin
     runs-on: ubuntu-latest
 
     outputs:
-      valid: ${{ steps.check-tag.outputs.valid }}
-      tag: ${{ steps.check-tag.outputs.tag }}
+      version: ${{ steps.meta.outputs.version }}
 
     steps:
-      - name: Check Tag
-        id: check-tag
+      - name: Verify main branch
         run: |
-          if [[ ${{ github.ref }} =~ ^refs/tags/[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-              echo "valid=true" >> $GITHUB_OUTPUT
-              TAG=$(echo $GITHUB_REF | cut -d / -f 3)
-              echo "tag=${TAG}" >> $GITHUB_OUTPUT
+          if [[ "${{ github.ref_name }}" != "main" ]]; then
+            echo "Release can only be done on the main branch."
+            exit 1
           fi
 
-  server:
-    if: needs.verify.outputs.valid == 'true'
-    name: Release server
-    runs-on: ubuntu-latest
-    permissions:
-      packages: write
-    needs: verify
-
-    steps:
       - name: Checkout project
-        uses: actions/checkout@v4
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build and push
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: packages/server/Dockerfile
-          push: true
-          tags: |
-            ghcr.io/${{ github.repository_owner }}/drop:latest
-            ghcr.io/${{ github.repository_owner }}/drop:${{ needs.verify.outputs.tag }}
-          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/drop:buildcache
-          cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/drop:buildcache,mode=max
-
-  plugin:
-    if: needs.verify.outputs.valid == 'true'
-    name: Release plugin
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    needs: verify
-
-    steps:
-      - name: Checkout project
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
 
@@ -97,8 +51,76 @@ jobs:
             rm private_key.pem
           fi
 
-      - name: Add files to release
+      - name: Check version
+        id: meta
         working-directory: dist
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release upload ${{ needs.verify.outputs.tag }} plugin_package.zip plugin_package.zip.sig
+        run: |
+          VERSION=$(unzip -p ./plugin_package.zip manifest.json | jq -r .version)
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+
+      - name: Upload plugin package
+        uses: actions/upload-artifact@v5
+        with:
+          name: plugin_package
+          path: |
+            dist/plugin_package.zip
+            dist/plugin_package.zip.sig
+          if-no-files-found: error
+
+  server:
+    name: Release server
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+    needs: plugin
+
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: packages/server/Dockerfile
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/drop:latest
+            ghcr.io/${{ github.repository_owner }}/drop:${{ needs.plugin.outputs.version }}
+          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/drop:buildcache
+          cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/drop:buildcache,mode=max
+
+  github:
+    name: Release to GitHub
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    needs:
+      - plugin
+      - server
+
+    steps:
+      - name: Download plugin package
+        uses: actions/download-artifact@v6
+        with:
+          name: plugin_package
+          path: dist
+
+      - name: Create release
+        uses: caido/action-release@v1
+        with:
+          tag: ${{ needs.plugin.outputs.version }}
+          commit: ${{ github.sha }}
+          body: 'Release ${{ needs.plugin.outputs.version }}'
+          artifacts: 'dist/plugin_package.zip,dist/plugin_package.zip.sig'
+          immutableCreate: true
