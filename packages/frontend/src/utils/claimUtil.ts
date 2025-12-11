@@ -107,6 +107,7 @@ export const claimTamper = async (
     section: section,
     query: query,
     collectionId: "1",
+    sources: [],
   });
   return res;
 };
