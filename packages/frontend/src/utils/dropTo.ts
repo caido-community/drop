@@ -11,27 +11,26 @@ import { eventBus } from "@/utils/eventBus";
 
 const callbacks = {
   "#/replay": async (sdk: FrontendSDK, connection: DropConnection) => {
-    const button = document.querySelector(
-      '[data-is-selected="true"][data-session-id]',
-    );
-    if (!button) {
-      sdk.window.showToast("Please select a replay tab first.", {
-        variant: "error",
-        duration: 5000,
-      });
-      return;
-    }
-    const id = button?.getAttribute("data-session-id");
-    if (!id) {
+    const selectedSession = sdk.replay.getCurrentSession();
+    if (!selectedSession) {
       sdk.window.showToast("Please select a replay session first.", {
         variant: "error",
         duration: 5000,
       });
       return;
     }
+
     const session = await sdk.graphql.replayEntriesBySession({
-      sessionId: id,
+      sessionId: selectedSession.id,
     });
+
+    if (!session || !session.replaySession) {
+      sdk.window.showToast("Error while getting replay session entries.", {
+        variant: "error",
+        duration: 5000,
+      });
+      return;
+    }
 
     const activeEntry = session?.replaySession?.activeEntry?.id;
     if (!activeEntry) {
@@ -50,6 +49,7 @@ const callbacks = {
       });
       return;
     }
+
     const data = {
       session: session.replaySession,
       entry: entryData.replayEntry,
@@ -127,20 +127,16 @@ const callbacks = {
   },
 
   "#/tamper": (sdk: FrontendSDK, connection: DropConnection) => {
-    const preset = document.querySelector(
-      '.c-tree-rule[data-is-active="true"]',
-    );
-    const id = preset?.getAttribute("data-rule-id");
-    if (!id) {
+    const currentRule = sdk.matchReplace.getCurrentRule();
+    if (!currentRule) {
       sdk.window.showToast("Please select a rule first.", {
         variant: "error",
         duration: 5000,
       });
       return;
     }
-    const rules = sdk.matchReplace.getRules();
-    const rule = rules.find((rule) => rule.id === id);
-    if (JSON.stringify(rule).indexOf('"kind":"ReplacerWorkflow"') > -1) {
+
+    if (JSON.stringify(currentRule).indexOf('"kind":"ReplacerWorkflow"') > -1) {
       sdk.window.showToast("Sorry, we don't support workflow M&R rules yet.", {
         variant: "error",
         duration: 5000,
@@ -149,7 +145,7 @@ const callbacks = {
     }
     const payload: DropPayload = {
       id: uuidv4(),
-      objects: [{ type: "Tamper", value: rule }],
+      objects: [{ type: "Tamper", value: currentRule }],
       notes: "M&R Rule drop",
     };
 
@@ -161,18 +157,14 @@ const callbacks = {
   },
 
   "#/filter": (sdk: FrontendSDK, connection: DropConnection) => {
-    const parent = document.querySelector(".c-list-items__well");
-    const preset = parent?.querySelector('[data-is-selected="true"]');
-    const id = preset?.getAttribute("data-preset-id");
-    if (!id) {
+    const filter = sdk.filters.getCurrentFilter();
+    if (!filter) {
       sdk.window.showToast("Please select a filter first.", {
         variant: "error",
         duration: 5000,
       });
       return;
     }
-    const filters = sdk.filters.getAll();
-    const filter = filters.find((filter) => filter.id === id);
     const payload: DropPayload = {
       id: uuidv4(),
       objects: [{ type: "Filter", value: filter }],
@@ -187,17 +179,14 @@ const callbacks = {
   },
 
   "#/scope": (sdk: FrontendSDK, connection: DropConnection) => {
-    const preset = document.querySelector('.c-preset[data-is-selected="true"]');
-    const id = preset?.getAttribute("data-preset-id");
-    if (!id) {
+    const scope = sdk.scopes.getCurrentScope();
+    if (!scope) {
       sdk.window.showToast("Please select a scope first.", {
         variant: "error",
         duration: 5000,
       });
       return;
     }
-    const scopes = sdk.scopes.getScopes();
-    const scope = scopes.find((scope) => scope.id === id);
     const payload: DropPayload = {
       id: uuidv4(),
       objects: [{ type: "Scope", value: scope }],

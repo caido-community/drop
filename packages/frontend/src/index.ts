@@ -4,7 +4,6 @@ import ToastService from "primevue/toastservice";
 import { createApp } from "vue";
 
 import DropToButton from "./components/DropToButton.vue";
-import { DOMInjectionManager } from "./dom/DOMInjectionManager";
 import { SDKPlugin } from "./plugins/sdk";
 import "./styles/customInjectionGlobal.css";
 import "./styles/index.css";
@@ -55,13 +54,64 @@ export const init = async (sdk: FrontendSDK) => {
 
   sdk.replay.addToSlot("session-toolbar-secondary", {
     type: "Custom",
-
     definition: {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      component: DropToButton as any,
+      component: DropToButton,
     },
   });
 
-  const domInjectionManager = new DOMInjectionManager(sdk);
-  domInjectionManager.start();
+  sdk.filters.addToSlot("create-header", {
+    type: "Custom",
+    definition: {
+      component: DropToButton,
+    },
+  });
+
+  sdk.filters.addToSlot("update-header", {
+    type: "Custom",
+    definition: {
+      component: DropToButton,
+    },
+  });
+
+  sdk.scopes.addToSlot("create-header", {
+    type: "Custom",
+    definition: {
+      component: DropToButton,
+    },
+  });
+
+  sdk.scopes.addToSlot("update-header", {
+    type: "Custom",
+    definition: {
+      component: DropToButton,
+    },
+  });
+
+  sdk.httpHistory.addToSlot("toolbar-primary", {
+    type: "Custom",
+    definition: {
+      component: DropToButton,
+    },
+  });
+
+  sdk.search.addToSlot("search-toolbar-primary", {
+    type: "Custom",
+    definition: {
+      component: DropToButton,
+    },
+  });
+
+  sdk.matchReplace.addToSlot("update-header", {
+    type: "Custom",
+    definition: {
+      component: DropToButton,
+    },
+  });
+
+  sdk.matchReplace.addToSlot("create-header", {
+    type: "Custom",
+    definition: {
+      component: DropToButton,
+    },
+  });
 };
