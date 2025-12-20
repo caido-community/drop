@@ -329,6 +329,24 @@ const onImportKey = async (event: any) => {
   }
 };
 
+const resetApiServer = async () => {
+  apiServer.value = defaultStorage.apiServer;
+  await ConfigService.updateConfig({ apiServer: defaultStorage.apiServer });
+  sdk.window.showToast("API Server URL reset to default", {
+    variant: "success",
+    duration: 2000,
+  });
+};
+
+const resetKeyServer = async () => {
+  keyserver.value = defaultStorage.keyServer;
+  await ConfigService.updateConfig({ keyServer: defaultStorage.keyServer });
+  sdk.window.showToast("Key Server URL reset to default", {
+    variant: "success",
+    duration: 2000,
+  });
+};
+
 onMounted(async () => {
   const config = ConfigService.getConfig();
   localConfig.value = config;
@@ -499,23 +517,39 @@ onMounted(async () => {
                 </p>
                 <div class="flex flex-col gap-2">
                   <label for="apiServer">API Server URL</label>
-                  <InputText
-                    id="apiServer"
-                    v-model="apiServer"
-                    placeholder="Enter API Server URL"
-                    @change="handleServerConfigChange"
-                    @keyup.enter="handleServerConfigChange"
-                  />
+                  <div class="flex gap-2">
+                    <InputText
+                      id="apiServer"
+                      v-model="apiServer"
+                      placeholder="Enter API Server URL"
+                      class="flex-1"
+                      @change="handleServerConfigChange"
+                      @keyup.enter="handleServerConfigChange"
+                    />
+                    <Button
+                      icon="fas fa-refresh"
+                      class="p-button-outlined"
+                      @click="resetApiServer"
+                    />
+                  </div>
                 </div>
                 <div class="flex flex-col gap-2">
                   <label for="keyserver">Key Server URL</label>
-                  <InputText
-                    id="keyserver"
-                    v-model="keyserver"
-                    placeholder="Enter Key Server URL"
-                    @change="handleServerConfigChange"
-                    @keyup.enter="handleServerConfigChange"
-                  />
+                  <div class="flex gap-2">
+                    <InputText
+                      id="keyserver"
+                      v-model="keyserver"
+                      class="flex-1"
+                      placeholder="Enter Key Server URL"
+                      @change="handleServerConfigChange"
+                      @keyup.enter="handleServerConfigChange"
+                    />
+                    <Button
+                      icon="fas fa-refresh"
+                      class="p-button-outlined"
+                      @click="resetKeyServer"
+                    />
+                  </div>
                 </div>
               </div>
             </div>
