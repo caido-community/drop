@@ -20,6 +20,7 @@
 </template>
 
 <script setup lang="ts">
+import { type Caido } from "@caido/sdk-frontend";
 import Select from "primevue/select";
 import { onMounted, ref } from "vue";
 
@@ -27,6 +28,10 @@ import { ConfigService } from "@/services/configService";
 import { type DropConnection, type DropPluginConfig } from "@/types";
 import { callbacks } from "@/utils/dropTo";
 import { logger } from "@/utils/logger";
+
+defineProps<{
+  sdk: Caido;
+}>();
 
 const isLoading = ref(false);
 const connections = ref<DropConnection[]>([]);
