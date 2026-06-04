@@ -4,7 +4,6 @@
     "target": "esnext",
     "module": "esnext",
     "lib": ["DOM", "ESNext"],
-    "types": ["@caido/sdk-backend"],
 
     "jsx": "preserve",
     "moduleResolution": "bundler",
