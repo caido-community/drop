@@ -1,4 +1,5 @@
 import { type DropPayload, type FrontendSDK } from "@/types";
+import { ReplaySchema } from "@/types/replay";
 import { logger } from "@/utils/logger";
 
 export const claimReplay = async (
@@ -10,26 +11,9 @@ export const claimReplay = async (
     logger.error("Invalid payload structure for claimReplay", payload);
     throw new Error("Invalid payload structure");
   }
-  const { session, entry } = payload.objects[0].value;
   try {
-    const result = await sdk.graphql.createReplaySession({
-      input: {
-        requestSource: {
-          raw: {
-            raw: entry.raw,
-            connectionInfo: {
-              host: entry.connection.host,
-              port: entry.connection.port,
-              isTLS: entry.connection.isTLS,
-            },
-          },
-        },
-      },
-    });
-    const sessionId = result.createReplaySession.session?.id;
-    if (!sessionId) {
-      throw new Error("Session ID is null");
-    }
+    const { session, entry } = ReplaySchema.parse(payload.objects[0].value);
+
     // Check for Drops collection and create if doesn't exist
     const collections = sdk.replay.getCollections();
     let dropsCollectionId = collections.find((c) => c.name === "Drops")?.id;
@@ -39,15 +23,37 @@ export const claimReplay = async (
       dropsCollectionId = newCollection.id;
     }
 
-    // Move session into Drops collection
-    await sdk.replay.moveSession(sessionId, dropsCollectionId);
-
-    sdk.replay.openTab(sessionId);
-    const isNameNumeric = /^\d+$/.test(session.name);
-    await sdk.graphql.renameReplaySession({
-      id: sessionId,
-      name: isNameNumeric ? session.name + " - " + friendAlias : session.name,
+    // Create session
+    // TODO: Use SDK.replay.createSession instead of graphql when
+    // the API returns the created session.
+    const kind = session.kind ?? "HTTP";
+    const result = await sdk.graphql.createReplaySession({
+      input: {
+        requestSource: {
+          raw: {
+            raw: entry.raw,
+            connectionInfo: entry.connection,
+          },
+        },
+        kind,
+      },
     });
+
+    const sessionId = result.createReplaySession.session?.id;
+    if (!sessionId) {
+      throw new Error("Session ID is null");
+    }
+
+    // Name the session
+    const isNameNumeric = /^\d+$/.test(session.name);
+    await sdk.replay.renameSession(
+      sessionId,
+      isNameNumeric ? session.name + " - " + friendAlias : session.name,
+    );
+
+    // Open the session tab
+    sdk.replay.openTab(sessionId);
+
     return result;
   } catch (error) {
     logger.error("Error creating replay session:", error);
