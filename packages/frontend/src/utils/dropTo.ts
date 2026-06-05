@@ -1,16 +1,20 @@
 import { v4 as uuidv4 } from "uuid";
 
-import { logger } from "./logger";
-
 import {
   type DropConnection,
   type DropPayload,
   type FrontendSDK,
 } from "@/types";
+import {
+  type ConnectionInfo,
+  type Replay,
+  type ReplaySessionKind,
+} from "@/types/replay";
 import { eventBus } from "@/utils/eventBus";
 
 const callbacks = {
   "#/replay": async (sdk: FrontendSDK, connection: DropConnection) => {
+    // Get the current selected session
     const selectedSession = sdk.replay.getCurrentSession();
     if (!selectedSession) {
       sdk.window.showToast("Please select a replay session first.", {
@@ -20,6 +24,7 @@ const callbacks = {
       return;
     }
 
+    // Get the session entries
     const session = await sdk.graphql.replayEntriesBySession({
       sessionId: selectedSession.id,
     });
@@ -32,6 +37,7 @@ const callbacks = {
       return;
     }
 
+    // Get the active entry
     const activeEntry = session?.replaySession?.activeEntry?.id;
     if (!activeEntry) {
       sdk.window.showToast("Please select a replay entry first.", {
@@ -41,7 +47,27 @@ const callbacks = {
       return;
     }
 
-    const entryData = await sdk.graphql.replayEntry({ id: activeEntry });
+    // Get the entry data
+    let kind: ReplaySessionKind = "HTTP";
+    switch (session.replaySession.__typename) {
+      case "ReplaySessionHttp":
+        kind = "HTTP";
+        break;
+      case "ReplaySessionWs":
+        kind = "WS";
+        break;
+      default:
+        sdk.window.showToast("Invalid session type", {
+          variant: "error",
+          duration: 5000,
+        });
+        return;
+    }
+
+    const entryData = await sdk.graphql.replayEntry({
+      id: activeEntry,
+      sessionKind: kind,
+    });
     if (!entryData || !entryData.replayEntry) {
       sdk.window.showToast("Please select a replay entry first.", {
         variant: "error",
@@ -50,19 +76,44 @@ const callbacks = {
       return;
     }
 
-    const data = {
-      session: session.replaySession,
-      entry: entryData.replayEntry,
+    // Create and dispatch the custom event
+    let raw: string;
+    let connectionInfo: ConnectionInfo;
+    switch (entryData.replayEntry.__typename) {
+      case "ReplayEntryHttp":
+        raw = entryData.replayEntry.draft?.raw ?? entryData.replayEntry.raw;
+        connectionInfo =
+          entryData.replayEntry.draft?.connection ??
+          entryData.replayEntry.connection;
+        break;
+      case "ReplayEntryWs":
+        raw =
+          entryData.replayEntry.http.draft?.raw ??
+          entryData.replayEntry.http.raw;
+        connectionInfo =
+          entryData.replayEntry.http.draft?.connection ??
+          entryData.replayEntry.http.connection;
+        break;
+    }
+
+    const data: Replay = {
+      session: {
+        id: selectedSession.id,
+        name: selectedSession.name,
+        kind,
+      },
+      entry: {
+        raw,
+        connection: connectionInfo,
+      },
     };
 
-    logger.log("Entry", entryData);
     const payload: DropPayload = {
       id: uuidv4(),
       objects: [{ type: "Replay", value: data }],
       notes: "Replay Session drop",
     };
 
-    // Create and dispatch the custom event
     eventBus.emit("drop:send", {
       payload: payload,
       type: "Replay",
